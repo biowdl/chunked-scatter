@@ -20,9 +20,10 @@
 
 import argparse
 from pathlib import Path
+from typing import TextIO
 
 
-def dict_chunker(in_file: file, chunk_size: int, overlap: int):
+def dict_chunker(in_file: TextIO, chunk_size: int, overlap: int):
     """
     Chunk the chromosomes/contigs from a dict.
     :param in_file: The input file.
@@ -54,7 +55,7 @@ def dict_chunker(in_file: file, chunk_size: int, overlap: int):
                 yield [name, int(position-overlap), length]
 
 
-def bed_chunker(in_file: file, chunk_size: int, overlap: int):
+def bed_chunker(in_file: TextIO, chunk_size: int, overlap: int):
     """
     Chunk the entries of the bed file.
     :param in_file: The input file.
