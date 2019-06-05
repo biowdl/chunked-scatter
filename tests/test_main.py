@@ -23,14 +23,13 @@ import sys
 
 import pytest
 
-from chunked_scatter.chunked_scatter import parse_args, main
+from chunked_scatter.chunked_scatter import parse_args, main, input_is_bed
 
 
 datadir = Path(__file__).parent / Path("data")
 
 
 def test_bed_input(tmpdir):
-    print(tmpdir)
     sys.argv = ["script", "-p", "{}/test_result_".format(tmpdir), "-i",
                 "tests/data/regions.bed", "-c", "5000", "-m", "1"]
     main()
@@ -41,6 +40,8 @@ def test_bed_input(tmpdir):
                       "chr1\t6850\t12000\n"
                       "chr1\t11850\t16000\n")
     expected_file2 = "chr2\t5000\t10000\n"
+    print(file1, file1.exists())
+    print(file2, file2.exists())
     assert file1.exists()
     assert file2.exists()
     assert file1.read() == expected_file1
@@ -48,7 +49,6 @@ def test_bed_input(tmpdir):
 
 
 def test_dict_input(tmpdir):
-    print(tmpdir)
     sys.argv = ["script", "-p", "{}/test_result_".format(tmpdir), "-i",
                 "tests/data/ref.dict"]
     main()
@@ -57,34 +57,29 @@ def test_dict_input(tmpdir):
                       "chr1\t999850\t2000000\n"
                       "chr1\t1999850\t3000000\n"
                       "chr2\t0\t500000\n")
+    print(file1, file1.exists())
     assert file1.exists()
     assert file1.read() == expected_file1
 
 
-def test_argparse_wrong_ext(capsys):
-    with pytest.raises(SystemExit):
-        sys.argv = ["script", "-p", "prefix", "-i", "input"]
-        parse_args()
-    stderr = capsys.readouterr().err
-    assert "bed or dict input expected, got ''" == stderr[-35:-1]
+def test_check_input_extension_wrong_ext(capsys):
+    with pytest.raises(ValueError,
+        match="Only files with .bed or .dict extensions are supported."):
+        input_is_bed(Path("input"))
 
 
-def test_parse_args_bed():
+def test_check_input_extension_bed():
+    assert input_is_bed(Path("input.bed"))
+
+
+def test_check_input_extension_dict():
+    assert not input_is_bed(Path("input.dict"))
+
+
+def test_parse_args():
     sys.argv = ["script", "-p", "prefix", "-i", "input.bed"]
-    args, bed_input = parse_args()
-    assert bed_input
+    args = parse_args()
     assert args.input == Path("input.bed")
-    assert args.prefix == "prefix"
-    assert args.chunk_size == 1e6
-    assert args.minimum_bp_per_file == 45e6
-    assert args.overlap == 150
-
-
-def test_parse_args_dict():
-    sys.argv = ["script", "-p", "prefix", "-i", "input.dict"]
-    args, bed_input = parse_args()
-    assert not bed_input
-    assert args.input == Path("input.dict")
     assert args.prefix == "prefix"
     assert args.chunk_size == 1e6
     assert args.minimum_bp_per_file == 45e6

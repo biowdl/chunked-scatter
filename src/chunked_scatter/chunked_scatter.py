@@ -31,13 +31,13 @@ def dict_chunker(in_file: TextIO, chunk_size: int, overlap: int):
     :param overlap: The size of the overlap between chunks.
     """
     for line in in_file.readlines():
-        line = line.split()
-        if line[0] == "@SQ":
-            for field in line:
-                if field[:2] == "LN":
-                    length = int(field.split(":")[1])
-                elif field[:2] == "SN":
-                    name = ":".join(field.split(":")[1:])
+        fields = line.split()
+        if fields[0] == "@SQ":
+            for field in fields:
+                if field.startswith("LN"):
+                    length = int(field[3:])
+                elif field.startswith("SN"):
+                    name = field[3:]
             # This will cause the last chunk to be between 0.5 and 1.5
             # times the chunk_size in length, this way we avoid the
             # possibility that the last chunk ends up being to small
@@ -47,7 +47,8 @@ def dict_chunker(in_file: TextIO, chunk_size: int, overlap: int):
                 if position-overlap <= 0:
                     yield [name, 0, int(position+chunk_size)]
                 else:
-                    yield [name, int(position-overlap), int(position+chunk_size)]
+                    yield [name, int(position-overlap),
+                           int(position+chunk_size)]
                 position += chunk_size
             if position-overlap <= 0:
                 yield [name, 0, length]
@@ -63,11 +64,11 @@ def bed_chunker(in_file: TextIO, chunk_size: int, overlap: int):
     :param overlap: The size of the overlap between chunks.
     """
     for line in in_file.readlines():
-        line = line.strip().split("\t")
-        if line[0] not in ["browser", "track"] and len(line) >= 3:
-            start = int(line[1])
-            end = int(line[2])
-            name = line[0]
+        fields = line.strip().split("\t")
+        if fields[0] not in ["browser", "track"] and len(line) >= 3:
+            start = int(fields[1])
+            end = int(fields[2])
+            name = fields[0]
             position = start
             # This will cause the last chunk to be between 0.5 and 1.5
             # times the chunk_size in length, this way we avoid the
@@ -86,12 +87,27 @@ def bed_chunker(in_file: TextIO, chunk_size: int, overlap: int):
                 yield [name, int(position-overlap), end]
 
 
+def input_is_bed(filename: Path):
+    """
+    Check whether or not the input file is a bed file.
+    :param filename: The filename.
+    """
+    if filename.suffix == ".bed":
+        return True
+    elif filename.suffix == ".dict":
+        return False
+    else:
+        raise ValueError(
+            "Only files with .bed or .dict extensions are supported.")
+
+
 def main():
-    args, bed_input = parse_args()
+    args = parse_args()
+    bed_input = input_is_bed(args.input)
     current_scatter = 0
     current_scatter_size = 0
     current_contig = None
-    out_file = open("{}{}.bed".format(args.prefix, current_scatter), "w")
+    current_contents = str()
     with args.input.open("r") as in_file:
         if bed_input:
             chunks = bed_chunker(in_file, args.chunk_size, args.overlap)
@@ -99,27 +115,36 @@ def main():
             chunks = dict_chunker(in_file, args.chunk_size, args.overlap)
 
         for chunk in chunks:
-            print(chunk)
+            # If the next chunk is on a different contig
             if chunk[0] != current_contig:
                 current_contig = chunk[0]
+                # and the current bed file contains enough bases
                 if current_scatter_size >= args.minimum_bp_per_file:
-                    out_file.close()
+                    # write the bed file
+                    with open("{}{}.bed".format(args.prefix, current_scatter),
+                              "w") as out_file:
+                        out_file.write(current_contents)
+                    # and start compiling the next bed file
                     current_scatter += 1
                     current_scatter_size = 0
-                    out_file = open("{}{}.bed".format(args.prefix,
-                        current_scatter), "w")
-            out_file.write("{}\t{}\t{}\n".format(chunk[0], chunk[1], chunk[2]))
+                    current_contents = str()
+            # Add the chunk to the bed file
+            current_contents += "{}\t{}\t{}\n".format(chunk[0], chunk[1],
+                                                      chunk[2])
             current_scatter_size += (chunk[2]-chunk[1])
-        out_file.close()
+    # Write last bed file
+    with open("{}{}.bed".format(args.prefix, current_scatter),
+              "w") as out_file:
+        out_file.write(current_contents)
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description=
-        "Given a sequence dict or a bed file, scatter over the defined "
-        "contigs/regions. Each contig/region will be split into multiple "
-        "overlapping regions, which will be written to a new bed file."
-        "Each contig will be placed in a new file, unless the length of the "
-        "contigs/regions doesn't exceed a given number.")
+    parser = argparse.ArgumentParser(
+        description="Given a sequence dict or a bed file, scatter over the "
+        "defined contigs/regions. Each contig/region will be split into "
+        "multiple overlapping regions, which will be written to a new bed "
+        "file. Each contig will be placed in a new file, unless the length of "
+        "the contigs/regions doesn't exceed a given number.")
     parser.add_argument("-p", "--prefix", type=str, required=True,
                         help="The prefix of the ouput files. Output will be "
                         "named like: <PREFIX><N>.bed, in which N is an "
@@ -149,16 +174,7 @@ def parse_args():
                         help="The number of bases which each chunk should "
                         "overlap with the preceding one. Defaults to 150.")
     args = parser.parse_args()
-
-    # Check whether or not the input file is an accepted format.
-    if args.input.suffix == ".bed":
-        bed_input = True
-    elif args.input.suffix == ".dict":
-        bed_input = False
-    else:
-        parser.error("bed or dict input expected, got '{}'".format(
-            args.input.suffix))
-    return args, bed_input
+    return args
 
 
 if __name__ == "__main__":
