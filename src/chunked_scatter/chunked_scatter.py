@@ -118,6 +118,7 @@ def chunked_scatter(regions: Iterable[BedRegion],
                     chunk_size: int,
                     overlap: int,
                     minimum_base_pairs: int,
+                    split_contigs = False,
                     intersect_regions: Optional[Iterable[BedRegion]] = None
                     ) -> Generator[List[BedRegion], None, None]:
     if intersect_regions is not None:
@@ -127,7 +128,7 @@ def chunked_scatter(regions: Iterable[BedRegion],
     chunk_list = []
     for chunk in region_chunker(regions, chunk_size, overlap):
         # If the next chunk is on a different contig
-        if chunk.contig != current_contig:
+        if chunk.contig != current_contig or split_contigs:
             current_contig = chunk.contig
             # and the current bed file contains enough bases
             if current_scatter_size >= minimum_base_pairs:
@@ -144,9 +145,12 @@ def chunked_scatter(regions: Iterable[BedRegion],
 
 def main():
     args = parse_args()
-    regions = file_to_regions(args.input)
-    scattered_chunks = chunked_scatter(regions, args.chunk_size, args.overlap,
-                            args.minimum_bp_per_file)
+    intersect_regions = file_to_regions(args.regions )if args.regions else None
+    scattered_chunks = chunked_scatter(file_to_regions(args.input),
+                                       args.chunk_size, args.overlap,
+                                       args.minimum_bp_per_file,
+                                       args.split_contigs,
+                                       intersect_regions)
     for current_scatter, chunk_list in enumerate(scattered_chunks):
         out_file =  f"{args.prefix}{current_scatter}.bed"
         with open(out_file, "wt") as out_file_h:
@@ -154,13 +158,8 @@ def main():
                                   for bed_regions in chunk_list)
 
 
-def parse_args():
-    parser = argparse.ArgumentParser(
-        description="Given a sequence dict or a bed file, scatter over the "
-        "defined contigs/regions. Each contig/region will be split into "
-        "multiple overlapping regions, which will be written to a new bed "
-        "file. Each contig will be placed in a new file, unless the length of "
-        "the contigs/regions doesn't exceed a given number.")
+def common_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser()
     parser.add_argument("-p", "--prefix", type=str, required=True,
                         help="The prefix of the ouput files. Output will be "
                         "named like: <PREFIX><N>.bed, in which N is an "
@@ -170,6 +169,20 @@ def parse_args():
                         "dict. Which format is used is detected by the "
                         "extension: '.bed' or '.dict'. This option is "
                         "mandatory.")
+    parser.add_argument("--split-contigs", action="store_true")
+    parser.add_argument("-r", "--regions", type=Path)
+    return parser
+
+
+def parse_args():
+    parser = common_parser()
+    parser.description=(
+        "Given a sequence dict or a bed file, scatter over the "
+        "defined contigs/regions. Each contig/region will be split into "
+        "multiple overlapping regions, which will be written to a new bed "
+        "file. Each contig will be placed in a new file, unless the length of "
+        "the contigs/regions doesn't exceed a given number.")
+
     parser.add_argument("-c", "--chunk-size", type=int, default=1e6,
                         metavar="SIZE",
                         help="The size of the chunks. The first chunk in a "

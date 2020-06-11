@@ -47,5 +47,6 @@ setup(name="chunked-scatter",
       package_dir={'': 'src'},
       entry_points={
           "console_scripts":
-              ["chunked-scatter=chunked_scatter.chunked_scatter:main"]
+              ["chunked-scatter=chunked_scatter.chunked_scatter:main",
+               "scatter-regions=chunked_scatter.scatter_regions:main"]
       })
