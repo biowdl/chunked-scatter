@@ -20,7 +20,7 @@
 
 import argparse
 from pathlib import Path
-from typing import NamedTuple, TextIO, Generator
+from typing import NamedTuple, Generator, Optional, Iterable
 
 
 class BedRegion(NamedTuple):
@@ -32,70 +32,57 @@ class BedRegion(NamedTuple):
         return f"{self.contig}\t{self.start}\t{self.end}"
 
 
-def dict_chunker(in_file: TextIO, chunk_size: int, overlap: int
-                 ) -> Generator[BedRegion, None, None]:
-    """
-    Chunk the chromosomes/contigs from a dict.
-    :param in_file: The input file.
-    :param chunk_size: The size of the chunks.
-    :param overlap: The size of the overlap between chunks.
-    """
-    for line in in_file.readlines():
-        fields = line.split()
-        if fields[0] == "@SQ":
+def dict_to_regions(in_file: str) -> Generator[BedRegion, None, None]:
+    with open(in_file, "rt") as in_file_h:
+        for line in in_file_h:
+            fields = line.strip().split()
+            if not fields[0] == "@SQ":
+                continue
+
+            contig: Optional[str] = None
+            length: Optional[int] = None
             for field in fields:
                 if field.startswith("LN"):
                     length = int(field[3:])
                 elif field.startswith("SN"):
-                    name = field[3:]
-            # This will cause the last chunk to be between 0.5 and 1.5
-            # times the chunk_size in length, this way we avoid the
-            # possibility that the last chunk ends up being to small
-            # (eg. 1+overlap bases).
-            position = 0
-            while position + chunk_size*1.5 < length:
-                if position-overlap <= 0:
-                    yield BedRegion(name, 0, int(position+chunk_size))
-                else:
-                    yield BedRegion(name, int(position-overlap),
-                           int(position+chunk_size))
-                position += chunk_size
-            if position-overlap <= 0:
-                yield BedRegion(name, 0, length)
-            else:
-                yield BedRegion(name, int(position-overlap), length)
+                    contig = field[3:]
+            if contig and length:
+                yield BedRegion(contig, 0, length)
 
 
-def bed_chunker(in_file: TextIO, chunk_size: int, overlap: int
-                ) -> Generator[BedRegion, None, None]:
+def bed_file_to_regions(in_file: str) -> Generator[BedRegion, None, None]:
+    with open(in_file, "rt") as in_file_h:
+        for line in in_file_h:
+            # Take the first 3 columns of each line to create a new BedRegion
+            fields = line.strip().split()
+            yield BedRegion(fields[0], int(fields[1]), int(fields[2]))
+
+
+def region_chunker(regions: Iterable[BedRegion], chunk_size: int, overlap: int
+                   ) -> Generator[BedRegion, None, None]:
     """
-    Chunk the entries of the bed file.
-    :param in_file: The input file.
+    :param regions:
     :param chunk_size: The size of the chunks.
     :param overlap: The size of the overlap between chunks.
+    :return:
     """
-    for line in in_file.readlines():
-        fields = line.strip().split("\t")
-        if fields[0] not in ["browser", "track"] and len(line) >= 3:
-            start = int(fields[1])
-            end = int(fields[2])
-            name = fields[0]
-            position = start
-            # This will cause the last chunk to be between 0.5 and 1.5
-            # times the chunk_size in length, this way we avoid the
-            # possibility that the last chunk ends up being to small
-            # (eg. 1+overlap bases).
-            while position + chunk_size*1.5 < end:
-                if position-overlap <= start:
-                    yield BedRegion(name, start, int(position+chunk_size))
-                else:
-                    yield BedRegion(name, int(position-overlap),
-                           int(position+chunk_size))
-                position += chunk_size
-            if position-overlap <= start:
-                yield BedRegion(name, start, end)
+    for contig, start, end in regions:
+        position = start
+        # This will cause the last chunk to be between 0.5 and 1.5
+        # times the chunk_size in length, this way we avoid the
+        # possibility that the last chunk ends up being to small
+        # (eg. 1+overlap bases).
+        while position + chunk_size * 1.5 < end:
+            if position - overlap <= start:
+                yield BedRegion(contig, start, int(position + chunk_size))
             else:
-                yield BedRegion(name, int(position-overlap), end)
+                yield BedRegion(contig, int(position - overlap),
+                                int(position + chunk_size))
+            position += chunk_size
+        if position - overlap <= start:
+            yield BedRegion(contig, start, end)
+        else:
+            yield BedRegion(contig, int(position - overlap), end)
 
 
 def input_is_bed(filename: Path):
@@ -119,29 +106,29 @@ def main():
     current_scatter_size = 0
     current_contig = None
     current_contents = str()
-    with args.input.open("r") as in_file:
-        if bed_input:
-            chunks = bed_chunker(in_file, args.chunk_size, args.overlap)
-        else:
-            chunks = dict_chunker(in_file, args.chunk_size, args.overlap)
+    if bed_input:
+        regions = bed_file_to_regions(args.input)
+    else:
+        regions = dict_to_regions(args.input)
+    chunked_regions = region_chunker(regions, args.chunk_size, args.overlap)
 
-        for chunk in chunks:
-            # If the next chunk is on a different contig
-            if chunk.contig != current_contig:
-                current_contig = chunk.contig
-                # and the current bed file contains enough bases
-                if current_scatter_size >= args.minimum_bp_per_file:
-                    # write the bed file
-                    with open("{}{}.bed".format(args.prefix, current_scatter),
-                              "w") as out_file:
-                        out_file.write(current_contents)
-                    # and start compiling the next bed file
-                    current_scatter += 1
-                    current_scatter_size = 0
-                    current_contents = str()
-            # Add the chunk to the bed file
-            current_contents += "{}\t{}\t{}\n".format(*chunk)
-            current_scatter_size += (chunk.end-chunk.start)
+    for chunk in chunked_regions:
+        # If the next chunk is on a different contig
+        if chunk.contig != current_contig:
+            current_contig = chunk.contig
+            # and the current bed file contains enough bases
+            if current_scatter_size >= args.minimum_bp_per_file:
+                # write the bed file
+                with open("{}{}.bed".format(args.prefix, current_scatter),
+                          "w") as out_file:
+                    out_file.write(current_contents)
+                # and start compiling the next bed file
+                current_scatter += 1
+                current_scatter_size = 0
+                current_contents = str()
+        # Add the chunk to the bed file
+        current_contents += "{}\t{}\t{}\n".format(*chunk)
+        current_scatter_size += (chunk.end-chunk.start)
     # Write last bed file
     with open("{}{}.bed".format(args.prefix, current_scatter),
               "w") as out_file:

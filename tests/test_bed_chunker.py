@@ -20,14 +20,15 @@
 
 from pathlib import Path
 
-from chunked_scatter.chunked_scatter import bed_chunker
+from chunked_scatter.chunked_scatter import bed_file_to_regions, region_chunker
 
 
 datadir = Path(__file__).parent / Path("data")
 
 
 def test_bed_chunker():
-    chunks = bed_chunker((datadir / Path("regions.bed")).open("r"), 5000, 150)
+    chunks = region_chunker(bed_file_to_regions(Path(datadir, "regions.bed")
+                                                ), 5000, 150)
     expected_output = [["chr1", 100, 1000], ["chr1", 2000, 7000],
                        ["chr1", 6850, 12000], ["chr1", 11850, 16000],
                        ["chr2", 5000, 10000]]
@@ -35,7 +36,8 @@ def test_bed_chunker():
 
 
 def test_bed_chunker_no_overlap():
-    chunks = bed_chunker((datadir / Path("regions.bed")).open("r"), 5000, 0)
+    chunks = region_chunker(bed_file_to_regions(Path(datadir, "regions.bed")
+                                                ), 5000, 0)
     expected_output = [["chr1", 100, 1000], ["chr1", 2000, 7000],
                        ["chr1", 7000, 12000], ["chr1", 12000, 16000],
                        ["chr2", 5000, 10000]]

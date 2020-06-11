@@ -20,27 +20,30 @@
 
 from pathlib import Path
 
-from chunked_scatter.chunked_scatter import dict_chunker
+from chunked_scatter.chunked_scatter import dict_to_regions, region_chunker
 
 
 datadir = Path(__file__).parent / Path("data")
 
 
 def test_dict_chunker():
-    chunks = dict_chunker((datadir / Path("ref.dict")).open("r"), 1e6, 150)
+    chunks = region_chunker(dict_to_regions(Path(datadir, "ref.dict")
+                                                ), 1e6, 150)
     expected_output = [["chr1", 0, 1e6], ["chr1", 999850, 2e6],
                        ["chr1", 1999850, 3e6], ["chr2", 0, 5e5]]
     assert [list(chunk) for chunk in chunks] == expected_output
 
 
 def test_dict_chunker_no_overlap():
-    chunks = dict_chunker((datadir / Path("ref.dict")).open("r"), 1e6, 0)
+    chunks = region_chunker(dict_to_regions(Path(datadir, "ref.dict")
+                                                ), 1e6, 0)
     expected_output = [["chr1", 0, 1e6], ["chr1", 1e6, 2e6],
                        ["chr1", 2e6, 3e6], ["chr2", 0, 5e5]]
     assert [list(chunk) for chunk in chunks] == expected_output
 
 
 def test_dict_chunker_big_value():
-    chunks = dict_chunker((datadir / Path("ref.dict")).open("r"), 1e12, 0)
+    chunks = region_chunker(dict_to_regions(Path(datadir, "ref.dict")
+                                                ), 1e12, 150)
     expected_output = [["chr1", 0, 3e6], ["chr2", 0, 5e5]]
     assert [list(chunk) for chunk in chunks] == expected_output
