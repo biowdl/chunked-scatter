@@ -117,8 +117,11 @@ def region_chunker(regions: Iterable[BedRegion], chunk_size: int, overlap: int
 def chunked_scatter(regions: Iterable[BedRegion],
                     chunk_size: int,
                     overlap: int,
-                    minimum_base_pairs: int
+                    minimum_base_pairs: int,
+                    intersect_regions: Optional[Iterable[BedRegion]] = None
                     ) -> Generator[List[BedRegion], None, None]:
+    if intersect_regions is not None:
+        regions = intersect_bed_regions(regions, intersect_regions)
     current_scatter_size = 0
     current_contig = None
     chunk_list = []
@@ -134,7 +137,9 @@ def chunked_scatter(regions: Iterable[BedRegion],
         # Add the chunk to the bed file
         chunk_list.append(chunk)
         current_scatter_size += (chunk.end-chunk.start)
-    yield chunk_list
+    # If there are leftovers yield them.
+    if chunk_list:
+        yield chunk_list
 
 
 def main():
