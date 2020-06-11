@@ -25,10 +25,19 @@ from .chunked_scatter import BedRegion, common_parser, chunked_scatter, \
 
 from typing import Generator, Iterable, List, Optional
 
+DEFAULT_SCATTER_SIZE = 10**9
 
 def scatter_regions(regions: Iterable[BedRegion],
                     scattersize: int, **kwargs
                     ) -> Generator[List[BedRegion], None, None]:
+    """
+    Interface to chunked_scatter with sane defaults that make it function
+    similar to biopet-scatterregions
+    :param regions: The regions over which to scatter.
+    :param scattersize: What the size of the scatter should be.
+    :param kwargs: Named arguments to chunked scatter.
+    :return: Yields lists of BedRegions which can be converted into bed files.
+    """
     return chunked_scatter(regions,
                            chunk_size=scattersize,
                            minimum_base_pairs=scattersize,
@@ -38,20 +47,24 @@ def scatter_regions(regions: Iterable[BedRegion],
 
 def argument_parser() -> argparse.ArgumentParser():
     parser = common_parser()
-    parser.description = ""
-    parser.add_argument("-s", "--scatter-size", type=int, default=10**9)
+    parser.description = (
+        "Given a sequence dict or a bed file, scatter over the defined "
+        "contigs/regions. Creates a bed file where the contigs add up "
+        "approximately to the given scatter size.")
+    parser.add_argument("-s", "--scatter-size", type=int,
+                        default=DEFAULT_SCATTER_SIZE,
+                        help=f"How large the regions over which to scatter "
+                             f"should be. Default: {DEFAULT_SCATTER_SIZE}.")
     return parser
 
 
 def main():
     args = argument_parser().parse_args()
-    intersect_regions = file_to_regions(args.regions )if args.regions else None
     scattered_chunks = scatter_regions(file_to_regions(args.input),
                                        args.scatter_size,
-                                       split_contigs=args.split_contigs,
-                                       intersect_regions=intersect_regions)
+                                       split_contigs=args.split_contigs)
     for current_scatter, chunk_list in enumerate(scattered_chunks):
-        out_file =  f"{args.prefix}{current_scatter}.bed"
+        out_file = f"{args.prefix}{current_scatter}.bed"
         with open(out_file, "wt") as out_file_h:
             out_file_h.writelines(str(bed_regions) + "\n"
                                   for bed_regions in chunk_list)

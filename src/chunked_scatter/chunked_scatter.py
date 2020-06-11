@@ -33,22 +33,6 @@ class BedRegion(NamedTuple):
         return f"{self.contig}\t{self.start}\t{self.end}"
 
 
-def intersect_bed_regions(regions_a: Iterable[BedRegion],
-                          regions_b: Iterable[BedRegion]
-                          ) -> Generator[BedRegion, None, None]:
-    # We iterate over b_regions multiple times.
-    b_regions = list(regions_b)
-
-    for region_a in regions_a:
-        for region_b in b_regions:
-            if not region_a.contig == region_b.contig:
-                continue
-            if region_a.start < region_b.end and region_b.start < region_a.end:
-                start = max(region_a.start, region_b.start)
-                end = min(region_a.end, region_b.end)
-                yield BedRegion(region_a.contig, start, end)
-
-
 def dict_to_regions(in_file: Union[str, os.PathLike]
                     ) -> Generator[BedRegion, None, None]:
     with open(in_file, "rt") as in_file_h:
@@ -119,10 +103,7 @@ def chunked_scatter(regions: Iterable[BedRegion],
                     overlap: int,
                     minimum_base_pairs: int,
                     split_contigs = False,
-                    intersect_regions: Optional[Iterable[BedRegion]] = None
                     ) -> Generator[List[BedRegion], None, None]:
-    if intersect_regions is not None:
-        regions = intersect_bed_regions(regions, intersect_regions)
     current_scatter_size = 0
     current_contig = None
     chunk_list = []
@@ -145,12 +126,10 @@ def chunked_scatter(regions: Iterable[BedRegion],
 
 def main():
     args = parse_args()
-    intersect_regions = file_to_regions(args.regions )if args.regions else None
     scattered_chunks = chunked_scatter(file_to_regions(args.input),
                                        args.chunk_size, args.overlap,
                                        args.minimum_bp_per_file,
-                                       args.split_contigs,
-                                       intersect_regions)
+                                       args.split_contigs)
     for current_scatter, chunk_list in enumerate(scattered_chunks):
         out_file =  f"{args.prefix}{current_scatter}.bed"
         with open(out_file, "wt") as out_file_h:
@@ -169,8 +148,8 @@ def common_parser() -> argparse.ArgumentParser:
                         "dict. Which format is used is detected by the "
                         "extension: '.bed' or '.dict'. This option is "
                         "mandatory.")
-    parser.add_argument("--split-contigs", action="store_true")
-    parser.add_argument("-r", "--regions", type=Path)
+    parser.add_argument("--split-contigs", action="store_true",
+                        help="If set, contigs are allowed to be split.")
     return parser
 
 
