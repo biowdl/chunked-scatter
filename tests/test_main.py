@@ -31,7 +31,7 @@ datadir = Path(__file__).parent / Path("data")
 
 def test_bed_input(tmpdir):
     sys.argv = ["script", "-p", "{}/test_result_".format(tmpdir), "-i",
-                "tests/data/regions.bed", "-c", "5000", "-m", "1"]
+                str(Path(datadir, "regions.bed")), "-c", "5000", "-m", "1"]
     main()
     file1 = tmpdir / Path("test_result_0.bed")
     file2 = tmpdir / Path("test_result_1.bed")
@@ -50,7 +50,7 @@ def test_bed_input(tmpdir):
 
 def test_dict_input(tmpdir):
     sys.argv = ["script", "-p", "{}/test_result_".format(tmpdir), "-i",
-                "tests/data/ref.dict"]
+                str(Path(datadir, "ref.dict"))]
     main()
     file1 = tmpdir / Path("test_result_0.bed")
     expected_file1 = ("chr1\t0\t1000000\n"
