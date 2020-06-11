@@ -32,3 +32,11 @@ def test_bed_chunker():
                        ["chr1", 6850, 12000], ["chr1", 11850, 16000],
                        ["chr2", 5000, 10000]]
     assert list(chunks) == expected_output
+
+
+def test_bed_chunker_no_overlap():
+    chunks = bed_chunker((datadir / Path("regions.bed")).open("r"), 5000, 0)
+    expected_output = [["chr1", 100, 1000], ["chr1", 2000, 7000],
+                       ["chr1", 7000, 12000], ["chr1", 12000, 16000],
+                       ["chr2", 5000, 10000]]
+    assert list(chunks) == expected_output
