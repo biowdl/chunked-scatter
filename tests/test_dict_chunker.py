@@ -31,3 +31,10 @@ def test_dict_chunker():
     expected_output = [["chr1", 0, 1e6], ["chr1", 999850, 2e6],
                        ["chr1", 1999850, 3e6], ["chr2", 0, 5e5]]
     assert list(chunks) == expected_output
+
+
+def test_dict_chunker_no_overlap():
+    chunks = dict_chunker((datadir / Path("ref.dict")).open("r"), 1e6, 0)
+    expected_output = [["chr1", 0, 1e6], ["chr1", 1e6, 2e6],
+                       ["chr1", 2e6, 3e6], ["chr2", 0, 5e5]]
+    assert list(chunks) == expected_output
