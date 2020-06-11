@@ -19,8 +19,9 @@
 # SOFTWARE.
 
 import argparse
+import os
 from pathlib import Path
-from typing import NamedTuple, Generator, Optional, Iterable
+from typing import NamedTuple, Generator, Optional, Iterable, List, Union
 
 
 class BedRegion(NamedTuple):
@@ -32,7 +33,8 @@ class BedRegion(NamedTuple):
         return f"{self.contig}\t{self.start}\t{self.end}"
 
 
-def dict_to_regions(in_file: str) -> Generator[BedRegion, None, None]:
+def dict_to_regions(in_file: Union[str, os.PathLike]
+                    ) -> Generator[BedRegion, None, None]:
     with open(in_file, "rt") as in_file_h:
         for line in in_file_h:
             fields = line.strip().split()
@@ -50,12 +52,23 @@ def dict_to_regions(in_file: str) -> Generator[BedRegion, None, None]:
                 yield BedRegion(contig, 0, length)
 
 
-def bed_file_to_regions(in_file: str) -> Generator[BedRegion, None, None]:
+def bed_file_to_regions(in_file: Union[str, os.PathLike]
+                        ) -> Generator[BedRegion, None, None]:
     with open(in_file, "rt") as in_file_h:
         for line in in_file_h:
             # Take the first 3 columns of each line to create a new BedRegion
             fields = line.strip().split()
             yield BedRegion(fields[0], int(fields[1]), int(fields[2]))
+
+
+def file_to_regions(in_file: Path):
+    if in_file.suffix == ".bed":
+        return bed_file_to_regions(in_file)
+    elif in_file.suffix == ".dict":
+        return dict_to_regions(in_file)
+    else:
+        raise NotImplementedError(
+            "Only files with .bed or .dict extensions are supported.")
 
 
 def region_chunker(regions: Iterable[BedRegion], chunk_size: int, overlap: int
@@ -85,54 +98,39 @@ def region_chunker(regions: Iterable[BedRegion], chunk_size: int, overlap: int
             yield BedRegion(contig, int(position - overlap), end)
 
 
-def input_is_bed(filename: Path):
-    """
-    Check whether or not the input file is a bed file.
-    :param filename: The filename.
-    """
-    if filename.suffix == ".bed":
-        return True
-    elif filename.suffix == ".dict":
-        return False
-    else:
-        raise ValueError(
-            "Only files with .bed or .dict extensions are supported.")
-
-
-def main():
-    args = parse_args()
-    bed_input = input_is_bed(args.input)
-    current_scatter = 0
+def chunked_scatter(regions: Iterable[BedRegion],
+                    chunk_size: int,
+                    overlap: int,
+                    minimum_base_pairs: int
+                    ) -> Generator[List[BedRegion], None, None]:
     current_scatter_size = 0
     current_contig = None
-    current_contents = str()
-    if bed_input:
-        regions = bed_file_to_regions(args.input)
-    else:
-        regions = dict_to_regions(args.input)
-    chunked_regions = region_chunker(regions, args.chunk_size, args.overlap)
-
-    for chunk in chunked_regions:
+    chunk_list = []
+    for chunk in region_chunker(regions, chunk_size, overlap):
         # If the next chunk is on a different contig
         if chunk.contig != current_contig:
             current_contig = chunk.contig
             # and the current bed file contains enough bases
-            if current_scatter_size >= args.minimum_bp_per_file:
-                # write the bed file
-                with open("{}{}.bed".format(args.prefix, current_scatter),
-                          "w") as out_file:
-                    out_file.write(current_contents)
-                # and start compiling the next bed file
-                current_scatter += 1
+            if current_scatter_size >= minimum_base_pairs:
+                yield chunk_list
+                chunk_list = []
                 current_scatter_size = 0
-                current_contents = str()
         # Add the chunk to the bed file
-        current_contents += "{}\t{}\t{}\n".format(*chunk)
+        chunk_list.append(chunk)
         current_scatter_size += (chunk.end-chunk.start)
-    # Write last bed file
-    with open("{}{}.bed".format(args.prefix, current_scatter),
-              "w") as out_file:
-        out_file.write(current_contents)
+    yield chunk_list
+
+
+def main():
+    args = parse_args()
+    regions = file_to_regions(args.input)
+    scattered_chunks = chunked_scatter(regions, args.chunk_size, args.overlap,
+                            args.minimum_bp_per_file)
+    for current_scatter, chunk_list in enumerate(scattered_chunks):
+        out_file =  f"{args.prefix}{current_scatter}.bed"
+        with open(out_file, "wt") as out_file_h:
+            out_file_h.writelines(str(bed_regions) + "\n"
+                                  for bed_regions in chunk_list)
 
 
 def parse_args():

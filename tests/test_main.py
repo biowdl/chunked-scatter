@@ -23,7 +23,7 @@ import sys
 
 import pytest
 
-from chunked_scatter.chunked_scatter import parse_args, main, input_is_bed
+from chunked_scatter.chunked_scatter import parse_args, main, file_to_regions
 
 
 datadir = Path(__file__).parent / Path("data")
@@ -63,17 +63,17 @@ def test_dict_input(tmpdir):
 
 
 def test_check_input_extension_wrong_ext(capsys):
-    with pytest.raises(ValueError,
+    with pytest.raises(NotImplementedError,
         match="Only files with .bed or .dict extensions are supported."):
-        input_is_bed(Path("input"))
+        file_to_regions(Path("input"))
 
 
 def test_check_input_extension_bed():
-    assert input_is_bed(Path("input.bed"))
+    assert file_to_regions(Path("input.bed"))
 
 
 def test_check_input_extension_dict():
-    assert not input_is_bed(Path("input.dict"))
+    assert file_to_regions(Path("input.dict"))
 
 
 def test_parse_args():
