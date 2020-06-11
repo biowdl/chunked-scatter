@@ -20,10 +20,20 @@
 
 import argparse
 from pathlib import Path
-from typing import TextIO
+from typing import NamedTuple, TextIO, Generator
 
 
-def dict_chunker(in_file: TextIO, chunk_size: int, overlap: int):
+class BedRegion(NamedTuple):
+    contig: str
+    start: int
+    end: int
+
+    def __str__(self):
+        return f"{self.contig}\t{self.start}\t{self.end}"
+
+
+def dict_chunker(in_file: TextIO, chunk_size: int, overlap: int
+                 ) -> Generator[BedRegion, None, None]:
     """
     Chunk the chromosomes/contigs from a dict.
     :param in_file: The input file.
@@ -45,18 +55,19 @@ def dict_chunker(in_file: TextIO, chunk_size: int, overlap: int):
             position = 0
             while position + chunk_size*1.5 < length:
                 if position-overlap <= 0:
-                    yield [name, 0, int(position+chunk_size)]
+                    yield BedRegion(name, 0, int(position+chunk_size))
                 else:
-                    yield [name, int(position-overlap),
-                           int(position+chunk_size)]
+                    yield BedRegion(name, int(position-overlap),
+                           int(position+chunk_size))
                 position += chunk_size
             if position-overlap <= 0:
-                yield [name, 0, length]
+                yield BedRegion(name, 0, length)
             else:
-                yield [name, int(position-overlap), length]
+                yield BedRegion(name, int(position-overlap), length)
 
 
-def bed_chunker(in_file: TextIO, chunk_size: int, overlap: int):
+def bed_chunker(in_file: TextIO, chunk_size: int, overlap: int
+                ) -> Generator[BedRegion, None, None]:
     """
     Chunk the entries of the bed file.
     :param in_file: The input file.
@@ -76,15 +87,15 @@ def bed_chunker(in_file: TextIO, chunk_size: int, overlap: int):
             # (eg. 1+overlap bases).
             while position + chunk_size*1.5 < end:
                 if position-overlap <= start:
-                    yield [name, start, int(position+chunk_size)]
+                    yield BedRegion(name, start, int(position+chunk_size))
                 else:
-                    yield [name, int(position-overlap),
-                           int(position+chunk_size)]
+                    yield BedRegion(name, int(position-overlap),
+                           int(position+chunk_size))
                 position += chunk_size
             if position-overlap <= start:
-                yield [name, start, end]
+                yield BedRegion(name, start, end)
             else:
-                yield [name, int(position-overlap), end]
+                yield BedRegion(name, int(position-overlap), end)
 
 
 def input_is_bed(filename: Path):
@@ -116,8 +127,8 @@ def main():
 
         for chunk in chunks:
             # If the next chunk is on a different contig
-            if chunk[0] != current_contig:
-                current_contig = chunk[0]
+            if chunk.contig != current_contig:
+                current_contig = chunk.contig
                 # and the current bed file contains enough bases
                 if current_scatter_size >= args.minimum_bp_per_file:
                     # write the bed file
@@ -129,9 +140,8 @@ def main():
                     current_scatter_size = 0
                     current_contents = str()
             # Add the chunk to the bed file
-            current_contents += "{}\t{}\t{}\n".format(chunk[0], chunk[1],
-                                                      chunk[2])
-            current_scatter_size += (chunk[2]-chunk[1])
+            current_contents += "{}\t{}\t{}\n".format(*chunk)
+            current_scatter_size += (chunk.end-chunk.start)
     # Write last bed file
     with open("{}{}.bed".format(args.prefix, current_scatter),
               "w") as out_file:
