@@ -43,10 +43,10 @@ def intersect_bed_regions(regions_a: Iterable[BedRegion],
         for region_b in b_regions:
             if not region_a.contig == region_b.contig:
                 continue
-            if region_a.start < region_b.end:
+            if region_a.start < region_b.end and region_b.start < region_a.end:
                 start = max(region_a.start, region_b.start)
-                end = min(region_b.end, region_b.end)
-                yield BedRegion[region_a.contig, start, end]
+                end = min(region_a.end, region_b.end)
+                yield BedRegion(region_a.contig, start, end)
 
 
 def dict_to_regions(in_file: Union[str, os.PathLike]
