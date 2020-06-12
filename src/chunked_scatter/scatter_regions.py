@@ -29,6 +29,11 @@ DEFAULT_SCATTER_SIZE = 10**9
 
 def merge_regions(regions: Iterable[BedRegion]
                   ) -> Generator[BedRegion, None, None]:
+    """
+    Merge regions that overlap or are exactly adjacent
+    :param regions: An iterable of possibly overlapping regions
+    :return: a generator of merged regions
+    """
     merged_region = None
     for region in regions:
         if merged_region is None:
