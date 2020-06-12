@@ -18,20 +18,19 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from pathlib import Path
 import sys
+from pathlib import Path
+
+from chunked_scatter.chunked_scatter import file_to_regions, main, parse_args
 
 import pytest
 
-from chunked_scatter.chunked_scatter import parse_args, main, file_to_regions
-
-
-datadir = Path(__file__).parent / Path("data")
+DATA_DIR = Path(__file__).parent / Path("data")
 
 
 def test_bed_input(tmpdir):
     sys.argv = ["script", "-p", "{}/test_result_".format(tmpdir), "-i",
-                str(Path(datadir, "regions.bed")), "-c", "5000", "-m", "1"]
+                str(Path(DATA_DIR, "regions.bed")), "-c", "5000", "-m", "1"]
     main()
     file1 = tmpdir / Path("test_result_0.bed")
     file2 = tmpdir / Path("test_result_1.bed")
@@ -50,7 +49,7 @@ def test_bed_input(tmpdir):
 
 def test_dict_input(tmpdir):
     sys.argv = ["script", "-p", "{}/test_result_".format(tmpdir), "-i",
-                str(Path(datadir, "ref.dict"))]
+                str(Path(DATA_DIR, "ref.dict"))]
     main()
     file1 = tmpdir / Path("test_result_0.bed")
     expected_file1 = ("chr1\t0\t1000000\n"
@@ -64,7 +63,8 @@ def test_dict_input(tmpdir):
 
 def test_check_input_extension_wrong_ext(capsys):
     with pytest.raises(NotImplementedError,
-        match="Only files with .bed or .dict extensions are supported."):
+                       match="Only files with .bed or .dict extensions are "
+                             "supported."):
         file_to_regions(Path("input"))
 
 

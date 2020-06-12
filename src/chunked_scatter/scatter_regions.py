@@ -19,11 +19,10 @@
 # SOFTWARE.
 
 import argparse
+from typing import Generator, Iterable, List
 
-from .chunked_scatter import BedRegion, common_parser, chunked_scatter, \
+from .chunked_scatter import BedRegion, chunked_scatter, common_parser, \
     file_to_regions, region_lists_to_scatter_files
-
-from typing import Generator, Iterable, List, Optional
 
 DEFAULT_SCATTER_SIZE = 10**9
 
@@ -46,7 +45,7 @@ def scatter_regions(regions: Iterable[BedRegion],
                            **kwargs)
 
 
-def argument_parser() -> argparse.ArgumentParser():
+def argument_parser() -> argparse.ArgumentParser:
     parser = common_parser()
     parser.description = (
         "Given a sequence dict or a bed file, scatter over the defined "

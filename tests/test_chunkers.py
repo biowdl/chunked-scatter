@@ -17,11 +17,9 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from chunked_scatter.chunked_scatter import BedRegion, region_chunker
 
 import pytest
-
-from chunked_scatter.chunked_scatter import BedRegion, chunked_scatter, \
-    region_chunker
 
 BED_REGIONS = [BedRegion("chr1", 100, 1000), BedRegion("chr1", 2000, 16000),
                BedRegion("chr2", 5000, 10000)]

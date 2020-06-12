@@ -21,7 +21,7 @@
 import argparse
 import os
 from pathlib import Path
-from typing import NamedTuple, Generator, Optional, Iterable, List, Union
+from typing import Generator, Iterable, List, NamedTuple, Optional, Union
 
 
 class BedRegion(NamedTuple):
@@ -102,11 +102,11 @@ def chunked_scatter(regions: Iterable[BedRegion],
                     chunk_size: int,
                     overlap: int,
                     minimum_base_pairs: int,
-                    split_contigs = False,
+                    split_contigs: bool = False,
                     ) -> Generator[List[BedRegion], None, None]:
     current_scatter_size = 0
     current_contig = None
-    chunk_list = []
+    chunk_list: List[BedRegion] = []
     for chunk in region_chunker(regions, chunk_size, overlap):
         # If the next chunk is on a different contig
         if chunk.contig != current_contig or split_contigs:
@@ -161,7 +161,7 @@ def common_parser() -> argparse.ArgumentParser:
 
 def parse_args():
     parser = common_parser()
-    parser.description=(
+    parser.description = (
         "Given a sequence dict or a bed file, scatter over the "
         "defined contigs/regions. Each contig/region will be split into "
         "multiple overlapping regions, which will be written to a new bed "
