@@ -22,6 +22,8 @@ from pathlib import Path
 
 from chunked_scatter.chunked_scatter import BedRegion, file_to_regions
 
+import pytest
+
 datadir = Path(__file__).parent / Path("data")
 
 
@@ -40,3 +42,10 @@ def test_file_to_regions_dict():
         BedRegion("chr1", 0, 3000000),
         BedRegion("chr2", 0, 500000)
     ]
+
+
+def test_file_to_regions_wrong_ext(capsys):
+    with pytest.raises(NotImplementedError,
+                       match="Only files with .bed or .dict extensions are "
+                             "supported."):
+        file_to_regions(Path("input"))

@@ -61,21 +61,6 @@ def test_dict_input(tmpdir):
     assert file1.read() == expected_file1
 
 
-def test_check_input_extension_wrong_ext(capsys):
-    with pytest.raises(NotImplementedError,
-                       match="Only files with .bed or .dict extensions are "
-                             "supported."):
-        file_to_regions(Path("input"))
-
-
-def test_check_input_extension_bed():
-    assert file_to_regions(Path("input.bed"))
-
-
-def test_check_input_extension_dict():
-    assert file_to_regions(Path("input.dict"))
-
-
 def test_parse_args():
     sys.argv = ["script", "-p", "prefix", "-i", "input.bed"]
     args = parse_args()
