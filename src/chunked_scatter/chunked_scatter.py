@@ -124,17 +124,23 @@ def chunked_scatter(regions: Iterable[BedRegion],
         yield chunk_list
 
 
+def region_lists_to_scatter_files(region_lists: Iterable[List[BedRegion]],
+                                  prefix: str):
+    Path(prefix).parent.mkdir(parents=True)
+    for scatter_number, region_list in enumerate(region_lists):
+        out_file = f"{prefix}{scatter_number}.bed"
+        with open(out_file, "wt") as out_file_h:
+            for bed_region in region_list:
+                out_file_h.write(str(bed_region) + os.linesep)
+
+
 def main():
     args = parse_args()
     scattered_chunks = chunked_scatter(file_to_regions(args.input),
                                        args.chunk_size, args.overlap,
                                        args.minimum_bp_per_file,
                                        args.split_contigs)
-    for current_scatter, chunk_list in enumerate(scattered_chunks):
-        out_file =  f"{args.prefix}{current_scatter}.bed"
-        with open(out_file, "wt") as out_file_h:
-            out_file_h.writelines(str(bed_regions) + "\n"
-                                  for bed_regions in chunk_list)
+    region_lists_to_scatter_files(scattered_chunks, args.prefix)
 
 
 def common_parser() -> argparse.ArgumentParser:
