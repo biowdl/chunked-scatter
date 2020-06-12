@@ -27,22 +27,42 @@ from .chunked_scatter import BedRegion, chunked_scatter, common_parser, \
 DEFAULT_SCATTER_SIZE = 10**9
 
 
+def merge_regions(regions: Iterable[BedRegion]):
+    merged_region = None
+    for region in regions:
+        if merged_region is None:
+            merged_region = region
+        else:
+            if (merged_region.contig == region.contig and
+                    merged_region.end >= region.start and
+                    region.end >= merged_region.start):
+                start = min(merged_region.start, region.start)
+                end = max(merged_region.end, region.end)
+                merged_region = BedRegion(merged_region.contig, start, end)
+            else:
+                yield merged_region
+                merged_region = region
+    if merged_region:
+        yield merged_region
+
+
 def scatter_regions(regions: Iterable[BedRegion],
                     scattersize: int, **kwargs
                     ) -> Generator[List[BedRegion], None, None]:
     """
     Interface to chunked_scatter with sane defaults that make it function
-    similar to biopet-scatterregions
+    similar to biopet-scatterregions. Also any overlapping bed records are
+    merged together.
     :param regions: The regions over which to scatter.
     :param scattersize: What the size of the scatter should be.
     :param kwargs: Named arguments to chunked scatter.
     :return: Yields lists of BedRegions which can be converted into bed files.
     """
-    return chunked_scatter(regions,
-                           chunk_size=scattersize,
-                           minimum_base_pairs=scattersize,
-                           overlap=0,
-                           **kwargs)
+    region_lists = chunked_scatter(regions, chunk_size=scattersize,
+                                   minimum_base_pairs=scattersize, overlap=0,
+                                   **kwargs)
+    for region_list in region_lists:
+        yield list(merge_regions(region_list))
 
 
 def argument_parser() -> argparse.ArgumentParser:

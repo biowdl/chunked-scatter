@@ -19,8 +19,6 @@
 # SOFTWARE.
 from chunked_scatter.chunked_scatter import BedRegion, chunked_scatter, \
     region_chunker
-from chunked_scatter.scatter_regions import scatter_regions
-
 
 import pytest
 
@@ -91,12 +89,4 @@ def test_chunked_scatter_split_contigs():
          BedRegion("chr1", 6850, 12000)],
         [BedRegion("chr1", 11850, 16000),
          BedRegion("chr2", 5000, 10000)],
-    ]
-
-
-def test_scatter_regions():
-    result = list(scatter_regions(DICT_REGIONS, 1_000_000))
-    assert result == [
-        [BedRegion("chr1", 0, 3_000_000)],
-        [BedRegion("chr2", 0, 500_000)]
     ]
