@@ -21,9 +21,7 @@
 import sys
 from pathlib import Path
 
-from chunked_scatter.chunked_scatter import file_to_regions, main, parse_args
-
-import pytest
+from chunked_scatter.chunked_scatter import main, parse_args
 
 DATA_DIR = Path(__file__).parent / Path("data")
 
