@@ -126,7 +126,9 @@ def chunked_scatter(regions: Iterable[BedRegion],
 
 def region_lists_to_scatter_files(region_lists: Iterable[List[BedRegion]],
                                   prefix: str):
-    Path(prefix).parent.mkdir(parents=True)
+    parent_dir = Path(prefix).parent
+    if not parent_dir.exists():
+        parent_dir.mkdir(parents=True)
     for scatter_number, region_list in enumerate(region_lists):
         out_file = f"{prefix}{scatter_number}.bed"
         with open(out_file, "wt") as out_file_h:
