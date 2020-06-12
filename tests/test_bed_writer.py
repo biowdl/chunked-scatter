@@ -26,6 +26,7 @@ from chunked_scatter.chunked_scatter import BedRegion, \
 
 def test_bed_writer(tmpdir):
     temp = Path(str(tmpdir))
+    temp.rmdir()  # Delete to test if function makes the dir.
     region_lists: List[List[BedRegion]] = [
         [BedRegion("sparta", 0, 300),
          BedRegion("persians", 0, 100_000)],
