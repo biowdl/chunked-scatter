@@ -1,6 +1,5 @@
 language: python
 python: 3.5
-dist: xenial
 
 install:
   - pip install tox
@@ -15,4 +14,4 @@ matrix:
       env: TOX_ENV=py36
     - python: 3.7
       env: TOX_ENV=py37
-    - env: TOX_ENV=py3-lint
+    - env: TOX_ENV=lint
