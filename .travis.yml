@@ -1,5 +1,5 @@
 language: python
-python: 3.5
+python: 3.6
 
 install:
   - pip install tox
@@ -8,6 +8,7 @@ script:
 
 matrix:
   include:
+    - env: TOX_ENV=lint
     - python: 3.6
       env: TOX_ENV=py36
       after_success:
@@ -16,4 +17,4 @@ matrix:
     - python: 3.7
       env: TOX_ENV=py37
     - python: 3.8
-    - env: TOX_ENV=lint
+      env: TOX_ENV=py38
