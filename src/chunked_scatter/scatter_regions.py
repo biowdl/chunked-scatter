@@ -27,7 +27,8 @@ from .chunked_scatter import BedRegion, chunked_scatter, common_parser, \
 DEFAULT_SCATTER_SIZE = 10**9
 
 
-def merge_regions(regions: Iterable[BedRegion]):
+def merge_regions(regions: Iterable[BedRegion]
+                  ) -> Generator[List[BedRegion], None, None]:
     merged_region = None
     for region in regions:
         if merged_region is None:

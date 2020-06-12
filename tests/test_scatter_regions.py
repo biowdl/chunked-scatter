@@ -51,11 +51,10 @@ def test_scatter_regions():
 
 
 def test_scatter_regions_split_contigs():
-    result = list(scatter_regions(DICT_REGIONS, 900_000, split_contigs=True))
+    result = list(scatter_regions(DICT_REGIONS, 1_100_000, split_contigs=True))
     assert result == [
-        [BedRegion("chr1", 0, 900_000)],
-        [BedRegion("chr1", 900_000, 1_800_000)],
-        [BedRegion("chr1", 1_800_000, 2_700_000)],
-        [BedRegion("chr1", 2_700_000, 3_000_000),
+        [BedRegion("chr1", 0, 1_100_000)],
+        [BedRegion("chr1", 1_100_000, 2_200_000)],
+        [BedRegion("chr1", 2_200_000, 3_000_000),
          BedRegion("chr2", 0, 500_000)]
     ]
