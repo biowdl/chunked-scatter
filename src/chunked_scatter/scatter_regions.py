@@ -28,7 +28,7 @@ DEFAULT_SCATTER_SIZE = 10**9
 
 
 def merge_regions(regions: Iterable[BedRegion]
-                  ) -> Generator[List[BedRegion], None, None]:
+                  ) -> Generator[BedRegion, None, None]:
     merged_region = None
     for region in regions:
         if merged_region is None:
