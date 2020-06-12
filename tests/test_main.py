@@ -22,6 +22,7 @@ import sys
 from pathlib import Path
 
 from chunked_scatter.chunked_scatter import main, parse_args
+from chunked_scatter.scatter_regions import main as scatter_regions_main
 
 DATA_DIR = Path(__file__).parent / Path("data")
 
@@ -67,3 +68,18 @@ def test_parse_args():
     assert args.chunk_size == 1e6
     assert args.minimum_bp_per_file == 45e6
     assert args.overlap == 150
+
+
+def test_scatter_regions_main(tmpdir):
+    sys.argv = ["scatter-regions", "-p",
+                str(Path(str(tmpdir), "scatters", "scatter-")),
+                "--split-contigs",
+                "-s", "1100000",
+                "-i", str(Path(DATA_DIR, "ref.dict"))]
+    scatter_regions_main()
+    assert Path(str(tmpdir), "scatters", "scatter-0.bed").exists()
+    assert Path(str(tmpdir), "scatters", "scatter-1.bed").exists()
+    assert Path(str(tmpdir), "scatters", "scatter-2.bed").exists()
+    assert Path(str(tmpdir), "scatters", "scatter-2.bed").read_text() == (
+        "chr1\t2200000\t3000000\nchr2\t0\t500000\n"
+    )
