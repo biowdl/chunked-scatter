@@ -38,7 +38,7 @@ def dict_to_regions(in_file: Union[str, os.PathLike]
     with open(in_file, "rt") as in_file_h:
         for line in in_file_h:
             fields = line.strip().split()
-            if not fields[0] == "@SQ":
+            if fields[0] != "@SQ":
                 continue
 
             contig: Optional[str] = None
@@ -56,8 +56,11 @@ def bed_file_to_regions(in_file: Union[str, os.PathLike]
                         ) -> Generator[BedRegion, None, None]:
     with open(in_file, "rt") as in_file_h:
         for line in in_file_h:
-            # Take the first 3 columns of each line to create a new BedRegion
             fields = line.strip().split()
+            # Skip browser and track fields and other invalid lines.
+            if fields[0] in ["browser", "track"] or len(fields) < 3:
+                continue
+            # Take the first 3 columns of each line to create a new BedRegion
             yield BedRegion(fields[0], int(fields[1]), int(fields[2]))
 
 
