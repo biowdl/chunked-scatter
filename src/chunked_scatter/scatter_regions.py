@@ -95,4 +95,6 @@ def main():
     scattered_chunks = scatter_regions(file_to_regions(args.input),
                                        args.scatter_size,
                                        contigs_can_be_split=args.split_contigs)
-    region_lists_to_scatter_files(scattered_chunks, args.prefix)
+    out_files = region_lists_to_scatter_files(scattered_chunks, args.prefix)
+    if args.print_paths:
+        print("\n".join(out_files))

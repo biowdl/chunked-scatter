@@ -94,31 +94,27 @@ def chunked_scatter(regions: Iterable[BedRegion],
 
 
 def region_lists_to_scatter_files(region_lists: Iterable[List[BedRegion]],
-                                  prefix: str) -> None:
+                                  prefix: str) -> List[str]:
     """
     Convert lists of BedRegions to '{prefix}{number}.bed' files. The number
     starts at 0 and is increased with 1 for each file.
     :param region_lists: The region lists to be converted into BED files.
     :param prefix: The filename prefix for the BedFiles
-    :return: None
+    :return: A list of filenames of the written paths.
     """
     parent_dir = Path(prefix).parent
     if not parent_dir.exists():
         parent_dir.mkdir(parents=True)
+    output_files: List[str] = []
     for scatter_number, region_list in enumerate(region_lists):
         out_file = f"{prefix}{scatter_number}.bed"
         with open(out_file, "wt") as out_file_h:
             for bed_region in region_list:
                 out_file_h.write(str(bed_region) + '\n')
-
-
-def main():
-    args = parse_args()
-    scattered_chunks = chunked_scatter(file_to_regions(args.input),
-                                       args.chunk_size, args.overlap,
-                                       args.minimum_bp_per_file,
-                                       args.split_contigs)
-    region_lists_to_scatter_files(scattered_chunks, args.prefix)
+        # I much prefer yield out_file instead. But this means the function
+        # won't do anything until it is iterated over, which is not nice.
+        output_files.append(out_file)
+    return output_files
 
 
 def common_parser() -> argparse.ArgumentParser:
@@ -136,6 +132,10 @@ def common_parser() -> argparse.ArgumentParser:
     parser.add_argument("--split-contigs", action="store_true",
                         help="If set, contigs are allowed to be split up over "
                              "multiple files.")
+    parser.add_argument("-P", "--print-paths", action="store_true",
+                        help="If set prints paths of the output files to "
+                             "STDOUT. This makes the program usable in "
+                             "scripts and worfklows.")
     return parser
 
 
@@ -170,6 +170,17 @@ def parse_args():
                         "overlap with the preceding one. Defaults to 150.")
     args = parser.parse_args()
     return args
+
+
+def main():
+    args = parse_args()
+    scattered_chunks = chunked_scatter(file_to_regions(args.input),
+                                       args.chunk_size, args.overlap,
+                                       args.minimum_bp_per_file,
+                                       args.split_contigs)
+    out_files = region_lists_to_scatter_files(scattered_chunks, args.prefix)
+    if args.print_paths:
+        print("\n".join(out_files))
 
 
 if __name__ == "__main__":  # pragma: no cover
