@@ -19,70 +19,10 @@
 # SOFTWARE.
 
 import argparse
-import os
 from pathlib import Path
-from typing import Generator, Iterable, List, NamedTuple, Optional, Union
+from typing import Generator, Iterable, List
 
-
-class BedRegion(NamedTuple):
-    """A class that contains a region described as in the BED file format."""
-    contig: str
-    start: int
-    end: int
-
-    def __str__(self):
-        return f"{self.contig}\t{self.start}\t{self.end}"
-
-
-def dict_to_regions(in_file: Union[str, os.PathLike]
-                    ) -> Generator[BedRegion, None, None]:
-    """
-    Converts a Picard SequenceDictionary file to a BedRegion Generator.
-    :param in_file: The sequence dictionary
-    :return: A generator of BedRegions
-    """
-    with open(in_file, "rt") as in_file_h:
-        for line in in_file_h:
-            fields = line.strip().split()
-            if fields[0] != "@SQ":
-                continue
-
-            contig: Optional[str] = None
-            length: Optional[int] = None
-            for field in fields:
-                if field.startswith("LN"):
-                    length = int(field[3:])
-                elif field.startswith("SN"):
-                    contig = field[3:]
-            if contig and length:
-                yield BedRegion(contig, 0, length)
-
-
-def bed_file_to_regions(in_file: Union[str, os.PathLike]
-                        ) -> Generator[BedRegion, None, None]:
-    """
-    Converts a BED file to a generator of BED regions
-    :param in_file: The BED file
-    :return: A BedRegion Generator
-    """
-    with open(in_file, "rt") as in_file_h:
-        for line in in_file_h:
-            fields = line.strip().split()
-            # Skip browser and track fields and other invalid lines.
-            if fields[0] in ["browser", "track"] or len(fields) < 3:
-                continue
-            # Take the first 3 columns of each line to create a new BedRegion
-            yield BedRegion(fields[0], int(fields[1]), int(fields[2]))
-
-
-def file_to_regions(in_file: Path):
-    if in_file.suffix == ".bed":
-        return bed_file_to_regions(in_file)
-    elif in_file.suffix == ".dict":
-        return dict_to_regions(in_file)
-    else:
-        raise NotImplementedError(
-            "Only files with .bed or .dict extensions are supported.")
+from .parsers import BedRegion, file_to_regions
 
 
 def region_chunker(regions: Iterable[BedRegion], chunk_size: int, overlap: int
@@ -154,48 +94,48 @@ def chunked_scatter(regions: Iterable[BedRegion],
 
 
 def region_lists_to_scatter_files(region_lists: Iterable[List[BedRegion]],
-                                  prefix: str) -> None:
+                                  prefix: str) -> List[str]:
     """
     Convert lists of BedRegions to '{prefix}{number}.bed' files. The number
     starts at 0 and is increased with 1 for each file.
     :param region_lists: The region lists to be converted into BED files.
     :param prefix: The filename prefix for the BedFiles
-    :return: None
+    :return: A list of filenames of the written paths.
     """
     parent_dir = Path(prefix).parent
     if not parent_dir.exists():
         parent_dir.mkdir(parents=True)
+    output_files: List[str] = []
     for scatter_number, region_list in enumerate(region_lists):
         out_file = f"{prefix}{scatter_number}.bed"
         with open(out_file, "wt") as out_file_h:
             for bed_region in region_list:
                 out_file_h.write(str(bed_region) + '\n')
-
-
-def main():
-    args = parse_args()
-    scattered_chunks = chunked_scatter(file_to_regions(args.input),
-                                       args.chunk_size, args.overlap,
-                                       args.minimum_bp_per_file,
-                                       args.split_contigs)
-    region_lists_to_scatter_files(scattered_chunks, args.prefix)
+        # I much prefer yield out_file instead. But this means the function
+        # won't do anything until it is iterated over, which is not nice.
+        output_files.append(out_file)
+    return output_files
 
 
 def common_parser() -> argparse.ArgumentParser:
     """Commmon arguments for chunked-scatter and scatter-regions."""
     parser = argparse.ArgumentParser()
-    parser.add_argument("-p", "--prefix", type=str, required=True,
+    parser.add_argument("-p", "--prefix", type=str, default="scatter-",
                         help="The prefix of the ouput files. Output will be "
                         "named like: <PREFIX><N>.bed, in which N is an "
-                        "incrementing number. This option is mandatory.")
-    parser.add_argument("-i", "--input", type=Path, required=True,
+                        "incrementing number. Default 'scatter-'.")
+    parser.add_argument("input", metavar="INPUT", type=Path,
                         help="The input file, either a bed file or a sequence "
                         "dict. Which format is used is detected by the "
-                        "extension: '.bed' or '.dict'. This option is "
+                        "extension: '.bed', '.fai' or '.dict'. This option is "
                         "mandatory.")
-    parser.add_argument("--split-contigs", action="store_true",
+    parser.add_argument("-S", "--split-contigs", action="store_true",
                         help="If set, contigs are allowed to be split up over "
                              "multiple files.")
+    parser.add_argument("-P", "--print-paths", action="store_true",
+                        help="If set prints paths of the output files to "
+                             "STDOUT. This makes the program usable in "
+                             "scripts and worfklows.")
     return parser
 
 
@@ -203,7 +143,7 @@ def parse_args():
     """Argument parser for the chunked-scatter program."""
     parser = common_parser()
     parser.description = (
-        "Given a sequence dict or a bed file, scatter over the "
+        "Given a sequence dict, fasta index or a bed file, scatter over the "
         "defined contigs/regions. Each contig/region will be split into "
         "multiple overlapping regions, which will be written to a new bed "
         "file. Each contig will be placed in a new file, unless the length of "
@@ -230,6 +170,17 @@ def parse_args():
                         "overlap with the preceding one. Defaults to 150.")
     args = parser.parse_args()
     return args
+
+
+def main():
+    args = parse_args()
+    scattered_chunks = chunked_scatter(file_to_regions(args.input),
+                                       args.chunk_size, args.overlap,
+                                       args.minimum_bp_per_file,
+                                       args.split_contigs)
+    out_files = region_lists_to_scatter_files(scattered_chunks, args.prefix)
+    if args.print_paths:
+        print("\n".join(out_files))
 
 
 if __name__ == "__main__":  # pragma: no cover

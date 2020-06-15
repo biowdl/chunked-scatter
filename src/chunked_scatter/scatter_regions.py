@@ -21,8 +21,9 @@
 import argparse
 from typing import Generator, Iterable, List
 
-from .chunked_scatter import BedRegion, chunked_scatter, common_parser, \
-    file_to_regions, region_lists_to_scatter_files
+from .chunked_scatter import chunked_scatter, common_parser, \
+    region_lists_to_scatter_files
+from .parsers import BedRegion, file_to_regions
 
 DEFAULT_SCATTER_SIZE = 10**9
 
@@ -79,8 +80,8 @@ def argument_parser() -> argparse.ArgumentParser:
     """Argument parser for the scatter-regions program."""
     parser = common_parser()
     parser.description = (
-        "Given a sequence dict or a bed file, scatter over the defined "
-        "contigs/regions. Creates a bed file where the contigs add up "
+        "Given a sequence dict, fasta index or a bed file, scatter over the "
+        "defined contigs/regions. Creates a bed file where the contigs add up "
         "approximately to the given scatter size.")
     parser.add_argument("-s", "--scatter-size", type=int,
                         default=DEFAULT_SCATTER_SIZE,
@@ -94,4 +95,6 @@ def main():
     scattered_chunks = scatter_regions(file_to_regions(args.input),
                                        args.scatter_size,
                                        contigs_can_be_split=args.split_contigs)
-    region_lists_to_scatter_files(scattered_chunks, args.prefix)
+    out_files = region_lists_to_scatter_files(scattered_chunks, args.prefix)
+    if args.print_paths:
+        print("\n".join(out_files))
