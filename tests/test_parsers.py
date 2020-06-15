@@ -55,6 +55,6 @@ def test_file_to_regions_fai():
 
 def test_file_to_regions_wrong_ext(capsys):
     with pytest.raises(NotImplementedError,
-                       match="Only files with .bed or .dict extensions are "
-                             "supported."):
+                       match="Only files with .bed, .fai or .dict extensions "
+                             "are supported."):
         file_to_regions(Path("input"))

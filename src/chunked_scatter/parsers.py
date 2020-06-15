@@ -96,4 +96,4 @@ def file_to_regions(in_file: Path):
         return fai_file_to_regions(in_file)
     else:
         raise NotImplementedError(
-            "Only files with .bed or .dict extensions are supported.")
+            "Only files with .bed, .fai or .dict extensions are supported.")
