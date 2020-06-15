@@ -169,7 +169,7 @@ def region_lists_to_scatter_files(region_lists: Iterable[List[BedRegion]],
         out_file = f"{prefix}{scatter_number}.bed"
         with open(out_file, "wt") as out_file_h:
             for bed_region in region_list:
-                out_file_h.write(str(bed_region) + os.linesep)
+                out_file_h.write(str(bed_region) + '\n')
 
 
 def main():
