@@ -131,7 +131,7 @@ def common_parser() -> argparse.ArgumentParser:
     parser.add_argument("-i", "--input", type=Path, required=True,
                         help="The input file, either a bed file or a sequence "
                         "dict. Which format is used is detected by the "
-                        "extension: '.bed' or '.dict'. This option is "
+                        "extension: '.bed', '.fai' or '.dict'. This option is "
                         "mandatory.")
     parser.add_argument("--split-contigs", action="store_true",
                         help="If set, contigs are allowed to be split up over "

@@ -33,8 +33,8 @@ class BedRegion(NamedTuple):
         return f"{self.contig}\t{self.start}\t{self.end}"
 
 
-def dict_to_regions(in_file: Union[str, os.PathLike]
-                    ) -> Generator[BedRegion, None, None]:
+def dict_file_to_regions(in_file: Union[str, os.PathLike]
+                         ) -> Generator[BedRegion, None, None]:
     """
     Converts a Picard SequenceDictionary file to a BedRegion Generator.
     :param in_file: The sequence dictionary
@@ -74,11 +74,26 @@ def bed_file_to_regions(in_file: Union[str, os.PathLike]
             yield BedRegion(fields[0], int(fields[1]), int(fields[2]))
 
 
+def fai_file_to_regions(in_file: Union[str, os.PathLike]
+                        ) -> Generator[BedRegion, None, None]:
+    # faidx format described here: https://www.htslib.org/doc/faidx.html
+    with open(in_file, "rt") as in_file_h:
+        for line in in_file_h:
+            # faidx has name, length, offset, linebases, linewidth columns. And
+            # optionally a qualoffset. By using maxsplit=2, we catch name and
+            # length, while not attempting to distinguish whether we have 5 or
+            # 6 columns.
+            name, length, _ = line.strip().split(maxsplit=2)
+            yield BedRegion(name, 0, int(length))
+
+
 def file_to_regions(in_file: Path):
     if in_file.suffix == ".bed":
         return bed_file_to_regions(in_file)
     elif in_file.suffix == ".dict":
-        return dict_to_regions(in_file)
+        return dict_file_to_regions(in_file)
+    elif in_file.suffix == ".fai":
+        return fai_file_to_regions(in_file)
     else:
         raise NotImplementedError(
             "Only files with .bed or .dict extensions are supported.")

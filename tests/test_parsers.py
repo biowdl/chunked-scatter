@@ -44,6 +44,15 @@ def test_file_to_regions_dict():
     ]
 
 
+def test_file_to_regions_fai():
+    result = list(file_to_regions(datadir / "reference.fasta.fai"))
+    assert result == [
+        BedRegion("chr1", 0, 15624),
+        BedRegion("chrM", 0, 16569),
+        BedRegion("chr1_alt", 0, 6120)
+    ]
+
+
 def test_file_to_regions_wrong_ext(capsys):
     with pytest.raises(NotImplementedError,
                        match="Only files with .bed or .dict extensions are "
