@@ -82,7 +82,7 @@ def test_chunked_scatter():
 
 def test_chunked_scatter_split_contigs():
     result = list(chunked_scatter(BED_REGIONS, 5000, 150, 10000,
-                                  split_contigs=True))
+                                  contigs_can_be_split=True))
     assert result == [
         [BedRegion("chr1", 100, 1000),
          BedRegion("chr1", 2000, 7000),

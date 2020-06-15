@@ -53,7 +53,8 @@ def merge_regions(regions: Iterable[BedRegion]
 
 
 def scatter_regions(regions: Iterable[BedRegion],
-                    scattersize: int, **kwargs
+                    scattersize: int,
+                    contigs_can_be_split: bool = False,
                     ) -> Generator[List[BedRegion], None, None]:
     """
     Interface to chunked_scatter with sane defaults that make it function
@@ -61,12 +62,15 @@ def scatter_regions(regions: Iterable[BedRegion],
     merged together.
     :param regions: The regions over which to scatter.
     :param scattersize: What the size of the scatter should be.
-    :param kwargs: Named arguments to chunked scatter.
+    :param contigs_can_be_split: Whether contigs (chr1, for example) are
+    allowed to be split across multiple lists.
     :return: Yields lists of BedRegions which can be converted into bed files.
     """
-    region_lists = chunked_scatter(regions, chunk_size=scattersize,
-                                   minimum_base_pairs=scattersize, overlap=0,
-                                   **kwargs)
+    region_lists = chunked_scatter(regions,
+                                   chunk_size=scattersize,
+                                   minimum_base_pairs=scattersize,
+                                   overlap=0,
+                                   contigs_can_be_split=contigs_can_be_split)
     for region_list in region_lists:
         yield list(merge_regions(region_list))
 
@@ -89,5 +93,5 @@ def main():
     args = argument_parser().parse_args()
     scattered_chunks = scatter_regions(file_to_regions(args.input),
                                        args.scatter_size,
-                                       split_contigs=args.split_contigs)
+                                       contigs_can_be_split=args.split_contigs)
     region_lists_to_scatter_files(scattered_chunks, args.prefix)

@@ -118,7 +118,7 @@ def chunked_scatter(regions: Iterable[BedRegion],
                     chunk_size: int,
                     overlap: int,
                     minimum_base_pairs: int,
-                    split_contigs: bool = False,
+                    contigs_can_be_split: bool = False,
                     ) -> Generator[List[BedRegion], None, None]:
     """
     Scatter regions in chunks with an overlap. It returns Lists of regions
@@ -129,8 +129,8 @@ def chunked_scatter(regions: Iterable[BedRegion],
     :param overlap: How much overlap there should be between chunks.
     :param minimum_base_pairs: What the minimum amount of base pairs should be
     that the regions encompass per List.
-    :param split_contigs: Whether contigs (chr1, for example) are allowed to be
-    split across multiple lists.
+    :param contigs_can_be_split: Whether contigs (chr1, for example) are
+    allowed to be split across multiple lists.
     :return: Lists of BedRegions, which can be converted into BED files.
     """
     current_scatter_size = 0
@@ -138,7 +138,7 @@ def chunked_scatter(regions: Iterable[BedRegion],
     chunk_list: List[BedRegion] = []
     for chunk in region_chunker(regions, chunk_size, overlap):
         # If the next chunk is on a different contig
-        if chunk.contig != current_contig or split_contigs:
+        if contigs_can_be_split or chunk.contig != current_contig:
             current_contig = chunk.contig
             # and the current bed file contains enough bases
             if current_scatter_size >= minimum_base_pairs:
@@ -194,7 +194,8 @@ def common_parser() -> argparse.ArgumentParser:
                         "extension: '.bed' or '.dict'. This option is "
                         "mandatory.")
     parser.add_argument("--split-contigs", action="store_true",
-                        help="If set, contigs are allowed to be split.")
+                        help="If set, contigs are allowed to be split over "
+                             "multiple files.")
     return parser
 
 
