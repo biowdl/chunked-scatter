@@ -5,6 +5,7 @@ Changelog
 
 version 0.2.0-dev
 ---------------------------
++ The ``--prefix`` flag now has ``scatter-`` as default value.
 + Added a ``--print-paths`` or ``-P`` flag that prints the paths of the output
   files to stdout.
 + Added support for fasta index (``.fai``) files.
