@@ -19,70 +19,10 @@
 # SOFTWARE.
 
 import argparse
-import os
 from pathlib import Path
-from typing import Generator, Iterable, List, NamedTuple, Optional, Union
+from typing import Generator, Iterable, List
 
-
-class BedRegion(NamedTuple):
-    """A class that contains a region described as in the BED file format."""
-    contig: str
-    start: int
-    end: int
-
-    def __str__(self):
-        return f"{self.contig}\t{self.start}\t{self.end}"
-
-
-def dict_to_regions(in_file: Union[str, os.PathLike]
-                    ) -> Generator[BedRegion, None, None]:
-    """
-    Converts a Picard SequenceDictionary file to a BedRegion Generator.
-    :param in_file: The sequence dictionary
-    :return: A generator of BedRegions
-    """
-    with open(in_file, "rt") as in_file_h:
-        for line in in_file_h:
-            fields = line.strip().split()
-            if fields[0] != "@SQ":
-                continue
-
-            contig: Optional[str] = None
-            length: Optional[int] = None
-            for field in fields:
-                if field.startswith("LN"):
-                    length = int(field[3:])
-                elif field.startswith("SN"):
-                    contig = field[3:]
-            if contig and length:
-                yield BedRegion(contig, 0, length)
-
-
-def bed_file_to_regions(in_file: Union[str, os.PathLike]
-                        ) -> Generator[BedRegion, None, None]:
-    """
-    Converts a BED file to a generator of BED regions
-    :param in_file: The BED file
-    :return: A BedRegion Generator
-    """
-    with open(in_file, "rt") as in_file_h:
-        for line in in_file_h:
-            fields = line.strip().split()
-            # Skip browser and track fields and other invalid lines.
-            if fields[0] in ["browser", "track"] or len(fields) < 3:
-                continue
-            # Take the first 3 columns of each line to create a new BedRegion
-            yield BedRegion(fields[0], int(fields[1]), int(fields[2]))
-
-
-def file_to_regions(in_file: Path):
-    if in_file.suffix == ".bed":
-        return bed_file_to_regions(in_file)
-    elif in_file.suffix == ".dict":
-        return dict_to_regions(in_file)
-    else:
-        raise NotImplementedError(
-            "Only files with .bed or .dict extensions are supported.")
+from .parsers import BedRegion, file_to_regions
 
 
 def region_chunker(regions: Iterable[BedRegion], chunk_size: int, overlap: int

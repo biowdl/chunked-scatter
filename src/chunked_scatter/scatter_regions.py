@@ -21,8 +21,9 @@
 import argparse
 from typing import Generator, Iterable, List
 
-from .chunked_scatter import BedRegion, chunked_scatter, common_parser, \
-    file_to_regions, region_lists_to_scatter_files
+from .chunked_scatter import chunked_scatter, common_parser, \
+    region_lists_to_scatter_files
+from .parsers import BedRegion, file_to_regions
 
 DEFAULT_SCATTER_SIZE = 10**9
 

@@ -20,7 +20,7 @@
 
 from pathlib import Path
 
-from chunked_scatter.chunked_scatter import BedRegion, file_to_regions
+from chunked_scatter.parsers import BedRegion, file_to_regions
 
 import pytest
 
