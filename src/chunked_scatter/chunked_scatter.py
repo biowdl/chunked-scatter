@@ -129,7 +129,7 @@ def common_parser() -> argparse.ArgumentParser:
                         "dict. Which format is used is detected by the "
                         "extension: '.bed', '.fai' or '.dict'. This option is "
                         "mandatory.")
-    parser.add_argument("--split-contigs", action="store_true",
+    parser.add_argument("-S", "--split-contigs", action="store_true",
                         help="If set, contigs are allowed to be split up over "
                              "multiple files.")
     parser.add_argument("-P", "--print-paths", action="store_true",
