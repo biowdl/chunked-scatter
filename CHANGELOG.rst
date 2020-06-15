@@ -5,6 +5,9 @@ Changelog
 
 version 0.2.0-dev
 ---------------------------
++ Added a ``--print-paths`` or ``-P`` flag that prints the paths of the output
+  files to stdout.
++ Added support for fasta index (``.fai``) files.
 + Added a ``--split-contigs`` flag to allow contigs to be split up over
   multiple files.
 + Added new ``scatter-regions`` command that is a replacement for
