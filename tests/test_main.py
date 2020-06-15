@@ -18,20 +18,18 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from pathlib import Path
 import sys
+from pathlib import Path
 
-import pytest
+from chunked_scatter.chunked_scatter import main, parse_args
+from chunked_scatter.scatter_regions import main as scatter_regions_main
 
-from chunked_scatter.chunked_scatter import parse_args, main, input_is_bed
-
-
-datadir = Path(__file__).parent / Path("data")
+DATA_DIR = Path(__file__).parent / Path("data")
 
 
 def test_bed_input(tmpdir):
     sys.argv = ["script", "-p", "{}/test_result_".format(tmpdir), "-i",
-                "tests/data/regions.bed", "-c", "5000", "-m", "1"]
+                str(Path(DATA_DIR, "regions.bed")), "-c", "5000", "-m", "1"]
     main()
     file1 = tmpdir / Path("test_result_0.bed")
     file2 = tmpdir / Path("test_result_1.bed")
@@ -50,7 +48,7 @@ def test_bed_input(tmpdir):
 
 def test_dict_input(tmpdir):
     sys.argv = ["script", "-p", "{}/test_result_".format(tmpdir), "-i",
-                "tests/data/ref.dict"]
+                str(Path(DATA_DIR, "ref.dict"))]
     main()
     file1 = tmpdir / Path("test_result_0.bed")
     expected_file1 = ("chr1\t0\t1000000\n"
@@ -62,20 +60,6 @@ def test_dict_input(tmpdir):
     assert file1.read() == expected_file1
 
 
-def test_check_input_extension_wrong_ext(capsys):
-    with pytest.raises(ValueError,
-        match="Only files with .bed or .dict extensions are supported."):
-        input_is_bed(Path("input"))
-
-
-def test_check_input_extension_bed():
-    assert input_is_bed(Path("input.bed"))
-
-
-def test_check_input_extension_dict():
-    assert not input_is_bed(Path("input.dict"))
-
-
 def test_parse_args():
     sys.argv = ["script", "-p", "prefix", "-i", "input.bed"]
     args = parse_args()
@@ -84,3 +68,18 @@ def test_parse_args():
     assert args.chunk_size == 1e6
     assert args.minimum_bp_per_file == 45e6
     assert args.overlap == 150
+
+
+def test_scatter_regions_main(tmpdir):
+    sys.argv = ["scatter-regions", "-p",
+                str(Path(str(tmpdir), "scatters", "scatter-")),
+                "--split-contigs",
+                "-s", "1100000",
+                "-i", str(Path(DATA_DIR, "ref.dict"))]
+    scatter_regions_main()
+    assert Path(str(tmpdir), "scatters", "scatter-0.bed").exists()
+    assert Path(str(tmpdir), "scatters", "scatter-1.bed").exists()
+    assert Path(str(tmpdir), "scatters", "scatter-2.bed").exists()
+    assert Path(str(tmpdir), "scatters", "scatter-2.bed").read_text() == (
+        "chr1\t2200000\t3000000\nchr2\t0\t500000\n"
+    )

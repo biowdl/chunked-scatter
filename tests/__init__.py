@@ -17,17 +17,3 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-
-from pathlib import Path
-
-from chunked_scatter.chunked_scatter import dict_chunker
-
-
-datadir = Path(__file__).parent / Path("data")
-
-
-def test_dict_chunker():
-    chunks = dict_chunker((datadir / Path("ref.dict")).open("r"), 1e6, 150)
-    expected_output = [["chr1", 0, 1e6], ["chr1", 999850, 2e6],
-                       ["chr1", 1999850, 3e6], ["chr2", 0, 5e5]]
-    assert list(chunks) == expected_output
