@@ -25,6 +25,7 @@ from typing import Generator, Iterable, List, NamedTuple, Optional, Union
 
 
 class BedRegion(NamedTuple):
+    """A class that contains a region described as in the BED file format."""
     contig: str
     start: int
     end: int
@@ -35,6 +36,11 @@ class BedRegion(NamedTuple):
 
 def dict_to_regions(in_file: Union[str, os.PathLike]
                     ) -> Generator[BedRegion, None, None]:
+    """
+    Converts a Picard SequenceDictionary file to a BedRegion Generator.
+    :param in_file: The sequence dictionary
+    :return: A generator of BedRegions
+    """
     with open(in_file, "rt") as in_file_h:
         for line in in_file_h:
             fields = line.strip().split()
@@ -54,6 +60,11 @@ def dict_to_regions(in_file: Union[str, os.PathLike]
 
 def bed_file_to_regions(in_file: Union[str, os.PathLike]
                         ) -> Generator[BedRegion, None, None]:
+    """
+    Converts a BED file to a generator of BED regions
+    :param in_file: The BED file
+    :return: A BedRegion Generator
+    """
     with open(in_file, "rt") as in_file_h:
         for line in in_file_h:
             fields = line.strip().split()
@@ -77,10 +88,12 @@ def file_to_regions(in_file: Path):
 def region_chunker(regions: Iterable[BedRegion], chunk_size: int, overlap: int
                    ) -> Generator[BedRegion, None, None]:
     """
-    :param regions:
+    Converts each region into chunks if the chunk_size is smaller than the
+    region size.
+    :param regions: The regions which to chunk.
     :param chunk_size: The size of the chunks.
     :param overlap: The size of the overlap between chunks.
-    :return:
+    :return: The new chunked regions.
     """
     for contig, start, end in regions:
         position = start
@@ -107,6 +120,19 @@ def chunked_scatter(regions: Iterable[BedRegion],
                     minimum_base_pairs: int,
                     split_contigs: bool = False,
                     ) -> Generator[List[BedRegion], None, None]:
+    """
+    Scatter regions in chunks with an overlap. It returns Lists of regions
+    where each list of regions has the regions describe at least the amount
+    of base pairs in minimum bas pairs. Except the last list.
+    :param regions: The regions which to chunk.
+    :param chunk_size: The size of each chunk.
+    :param overlap: How much overlap there should be between chunks.
+    :param minimum_base_pairs: What the minimum amount of base pairs should be
+    that the regions encompass per List.
+    :param split_contigs: Whether contigs (chr1, for example) are allowed to be
+    split across multiple lists.
+    :return: Lists of BedRegions, which can be converted into BED files.
+    """
     current_scatter_size = 0
     current_contig = None
     chunk_list: List[BedRegion] = []
@@ -128,7 +154,14 @@ def chunked_scatter(regions: Iterable[BedRegion],
 
 
 def region_lists_to_scatter_files(region_lists: Iterable[List[BedRegion]],
-                                  prefix: str):
+                                  prefix: str) -> None:
+    """
+    Convert lists of BedRegions to '{prefix}{number}.bed' files. The number
+    starts at 0 and is increased with 1 for each file.
+    :param region_lists: The region lists to be converted into BED files.
+    :param prefix: The filename prefix for the BedFiles
+    :return: None
+    """
     parent_dir = Path(prefix).parent
     if not parent_dir.exists():
         parent_dir.mkdir(parents=True)
@@ -149,6 +182,7 @@ def main():
 
 
 def common_parser() -> argparse.ArgumentParser:
+    """Commmon arguments for chunked-scatter and scatter-regions."""
     parser = argparse.ArgumentParser()
     parser.add_argument("-p", "--prefix", type=str, required=True,
                         help="The prefix of the ouput files. Output will be "
@@ -165,6 +199,7 @@ def common_parser() -> argparse.ArgumentParser:
 
 
 def parse_args():
+    """Argument parser for the chunked-scatter program."""
     parser = common_parser()
     parser.description = (
         "Given a sequence dict or a bed file, scatter over the "

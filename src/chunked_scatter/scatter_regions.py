@@ -72,6 +72,7 @@ def scatter_regions(regions: Iterable[BedRegion],
 
 
 def argument_parser() -> argparse.ArgumentParser:
+    """Argument parser for the scatter-regions program."""
     parser = common_parser()
     parser.description = (
         "Given a sequence dict or a bed file, scatter over the defined "
