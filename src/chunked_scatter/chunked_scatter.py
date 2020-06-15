@@ -124,7 +124,7 @@ def common_parser() -> argparse.ArgumentParser:
                         help="The prefix of the ouput files. Output will be "
                         "named like: <PREFIX><N>.bed, in which N is an "
                         "incrementing number. Default 'scatter-'.")
-    parser.add_argument("-i", "--input", type=Path, required=True,
+    parser.add_argument("input", metavar="INPUT", type=Path,
                         help="The input file, either a bed file or a sequence "
                         "dict. Which format is used is detected by the "
                         "extension: '.bed', '.fai' or '.dict'. This option is "
