@@ -124,10 +124,10 @@ def main():
 def common_parser() -> argparse.ArgumentParser:
     """Commmon arguments for chunked-scatter and scatter-regions."""
     parser = argparse.ArgumentParser()
-    parser.add_argument("-p", "--prefix", type=str, required=True,
+    parser.add_argument("-p", "--prefix", type=str, default="scatter-",
                         help="The prefix of the ouput files. Output will be "
                         "named like: <PREFIX><N>.bed, in which N is an "
-                        "incrementing number. This option is mandatory.")
+                        "incrementing number. Default 'scatter-'.")
     parser.add_argument("-i", "--input", type=Path, required=True,
                         help="The input file, either a bed file or a sequence "
                         "dict. Which format is used is detected by the "
