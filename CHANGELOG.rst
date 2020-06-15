@@ -5,6 +5,8 @@ Changelog
 
 version 0.2.0-dev
 ---------------------------
++ Added a ``--split-contigs`` flag to allow contigs to be split up over
+  multiple files.
 + Added new ``scatter-regions`` command that is a replacement for
   `biopet-scatterregions <https://github.com/biopet/scatterregions>`_. Unlike
   biopet-scatterregions, ``scatter-regions`` works properly with scatter sizes
