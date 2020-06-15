@@ -194,7 +194,7 @@ def common_parser() -> argparse.ArgumentParser:
                         "extension: '.bed' or '.dict'. This option is "
                         "mandatory.")
     parser.add_argument("--split-contigs", action="store_true",
-                        help="If set, contigs are allowed to be split over "
+                        help="If set, contigs are allowed to be split up over "
                              "multiple files.")
     return parser
 
