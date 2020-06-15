@@ -17,8 +17,9 @@ tuned towards creating genome scatters for GATK tools.
 
 ## Usage
 ```
-usage: chunked-scatter [-h] [-p PREFIX] -i INPUT [--split-contigs] [-P]
-                       [-c SIZE] [-m MINIMUM_BP_PER_FILE] [-o OVERLAP]
+usage: chunked-scatter [-h] [-p PREFIX] [-S] [-P] [-c SIZE]
+                       [-m MINIMUM_BP_PER_FILE] [-o OVERLAP]
+                       INPUT
 
 Given a sequence dict, fasta index or a bed file, scatter over the defined
 contigs/regions. Each contig/region will be split into multiple overlapping
@@ -26,17 +27,18 @@ regions, which will be written to a new bed file. Each contig will be placed
 in a new file, unless the length of the contigs/regions doesn't exceed a given
 number.
 
+positional arguments:
+  INPUT                 The input file, either a bed file or a sequence dict.
+                        Which format is used is detected by the extension:
+                        '.bed', '.fai' or '.dict'. This option is mandatory.
+
 optional arguments:
   -h, --help            show this help message and exit
   -p PREFIX, --prefix PREFIX
                         The prefix of the ouput files. Output will be named
                         like: <PREFIX><N>.bed, in which N is an incrementing
                         number. Default 'scatter-'.
-  -i INPUT, --input INPUT
-                        The input file, either a bed file or a sequence dict.
-                        Which format is used is detected by the extension:
-                        '.bed', '.fai' or '.dict'. This option is mandatory.
-  --split-contigs       If set, contigs are allowed to be split up over
+  -S, --split-contigs   If set, contigs are allowed to be split up over
                         multiple files.
   -P, --print-paths     If set prints paths of the output files to STDOUT.
                         This makes the program usable in scripts and
@@ -59,12 +61,16 @@ optional arguments:
                         with the preceding one. Defaults to 150.
 
 
-usage: scatter-regions [-h] [-p PREFIX] -i INPUT [--split-contigs] [-P]
-                       [-s SCATTER_SIZE]
+usage: scatter-regions [-h] [-p PREFIX] [-S] [-P] [-s SCATTER_SIZE] INPUT
 
 Given a sequence dict, fasta index or a bed file, scatter over the defined
 contigs/regions. Creates a bed file where the contigs add up approximately to
 the given scatter size.
+
+positional arguments:
+  INPUT                 The input file, either a bed file or a sequence dict.
+                        Which format is used is detected by the extension:
+                        '.bed', '.fai' or '.dict'. This option is mandatory.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -72,11 +78,7 @@ optional arguments:
                         The prefix of the ouput files. Output will be named
                         like: <PREFIX><N>.bed, in which N is an incrementing
                         number. Default 'scatter-'.
-  -i INPUT, --input INPUT
-                        The input file, either a bed file or a sequence dict.
-                        Which format is used is detected by the extension:
-                        '.bed', '.fai' or '.dict'. This option is mandatory.
-  --split-contigs       If set, contigs are allowed to be split up over
+  -S, --split-contigs   If set, contigs are allowed to be split up over
                         multiple files.
   -P, --print-paths     If set prints paths of the output files to STDOUT.
                         This makes the program usable in scripts and
