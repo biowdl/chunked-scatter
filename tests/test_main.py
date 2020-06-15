@@ -27,9 +27,10 @@ from chunked_scatter.scatter_regions import main as scatter_regions_main
 DATA_DIR = Path(__file__).parent / Path("data")
 
 
-def test_bed_input(tmpdir):
+def test_bed_input(tmpdir, capsys):
     sys.argv = ["script", "-p", "{}/test_result_".format(tmpdir), "-i",
-                str(Path(DATA_DIR, "regions.bed")), "-c", "5000", "-m", "1"]
+                str(Path(DATA_DIR, "regions.bed")), "-c", "5000", "-m", "1",
+                "-P"]
     main()
     file1 = tmpdir / Path("test_result_0.bed")
     file2 = tmpdir / Path("test_result_1.bed")
@@ -44,6 +45,7 @@ def test_bed_input(tmpdir):
     assert file2.exists()
     assert file1.read() == expected_file1
     assert file2.read() == expected_file2
+    assert str(tmpdir / Path("test_result_0.bed")) in capsys.readouterr().out
 
 
 def test_dict_input(tmpdir):
@@ -70,12 +72,13 @@ def test_parse_args():
     assert args.overlap == 150
 
 
-def test_scatter_regions_main(tmpdir):
+def test_scatter_regions_main(tmpdir, capsys):
     sys.argv = ["scatter-regions", "-p",
                 str(Path(str(tmpdir), "scatters", "scatter-")),
                 "--split-contigs",
                 "-s", "1100000",
-                "-i", str(Path(DATA_DIR, "ref.dict"))]
+                "-i", str(Path(DATA_DIR, "ref.dict")),
+                "--print-paths"]
     scatter_regions_main()
     assert Path(str(tmpdir), "scatters", "scatter-0.bed").exists()
     assert Path(str(tmpdir), "scatters", "scatter-1.bed").exists()
@@ -83,3 +86,5 @@ def test_scatter_regions_main(tmpdir):
     assert Path(str(tmpdir), "scatters", "scatter-2.bed").read_text() == (
         "chr1\t2200000\t3000000\nchr2\t0\t500000\n"
     )
+    captured = capsys.readouterr()
+    assert str(Path(str(tmpdir), "scatters", "scatter-0.bed")) in captured.out
