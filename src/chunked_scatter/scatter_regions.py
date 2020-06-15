@@ -80,8 +80,8 @@ def argument_parser() -> argparse.ArgumentParser:
     """Argument parser for the scatter-regions program."""
     parser = common_parser()
     parser.description = (
-        "Given a sequence dict or a bed file, scatter over the defined "
-        "contigs/regions. Creates a bed file where the contigs add up "
+        "Given a sequence dict, fasta index or a bed file, scatter over the "
+        "defined contigs/regions. Creates a bed file where the contigs add up "
         "approximately to the given scatter size.")
     parser.add_argument("-s", "--scatter-size", type=int,
                         default=DEFAULT_SCATTER_SIZE,

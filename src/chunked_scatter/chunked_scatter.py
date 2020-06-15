@@ -143,7 +143,7 @@ def parse_args():
     """Argument parser for the chunked-scatter program."""
     parser = common_parser()
     parser.description = (
-        "Given a sequence dict or a bed file, scatter over the "
+        "Given a sequence dict, fasta index or a bed file, scatter over the "
         "defined contigs/regions. Each contig/region will be split into "
         "multiple overlapping regions, which will be written to a new bed "
         "file. Each contig will be placed in a new file, unless the length of "
