@@ -16,6 +16,8 @@ tuned towards creating genome scatters for GATK tools.
     http://bioconda.github.io/user/install.html#).
 
 ## Usage
+
+### chunked-scatter
 ```
 usage: chunked-scatter [-h] [-p PREFIX] [-S] [-P] [-c SIZE]
                        [-m MINIMUM_BP_PER_FILE] [-o OVERLAP]
@@ -59,8 +61,10 @@ optional arguments:
   -o OVERLAP, --overlap OVERLAP
                         The number of bases which each chunk should overlap
                         with the preceding one. Defaults to 150.
+```
 
-
+### scatter-regions
+```
 usage: scatter-regions [-h] [-p PREFIX] [-S] [-P] [-s SCATTER_SIZE] INPUT
 
 Given a sequence dict, fasta index or a bed file, scatter over the defined
