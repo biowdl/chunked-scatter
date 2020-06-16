@@ -1,6 +1,6 @@
 # chunked-scatter and scatter-regions
 
-The `chunked-scatter` tool takes a bed file or sequence dictionary as input 
+The `chunked-scatter` tool takes a bed file, fasta index, or sequence dictionary as input 
 and divides the
 contigs/chromosomes into overlapping chunks of a given size. These chunks will
 then be placed in new bed files, one chromosomes per file. Small chromosomes
