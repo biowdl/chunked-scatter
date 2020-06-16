@@ -1,6 +1,5 @@
 language: python
-python: 3.5
-dist: xenial
+python: 3.6
 
 install:
   - pip install tox
@@ -9,10 +8,13 @@ script:
 
 matrix:
   include:
-    - python: 3.5
-      env: TOX_ENV=py35
+    - env: TOX_ENV=lint
     - python: 3.6
       env: TOX_ENV=py36
+      after_success:
+        - pip install codecov
+        - codecov -v
     - python: 3.7
       env: TOX_ENV=py37
-    - env: TOX_ENV=py3-lint
+    - python: 3.8
+      env: TOX_ENV=py38

@@ -7,8 +7,8 @@
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -24,20 +24,22 @@ with open("README.md", "r") as readme_file:
     LONG_DESCRIPTION = readme_file.read()
 
 setup(name="chunked-scatter",
-      version="0.1.0",
-      description="Chunk and scatter the regions in a bed or sequence dict"
+      version="0.2.0",
+      description="Chunk and scatter the regions in a bed or sequence dict "
                   "file",
       long_description=LONG_DESCRIPTION,
       long_description_content_type='text/markdown',
       classifiers=[
         "Programming Language :: Python :: 3 :: Only",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Topic :: Scientific/Engineering :: Bio-Informatics",
         "Development Status :: 3 - Alpha",
         "License :: OSI Approved :: MIT License",
       ],
+      python_requires=">=3.6",
       keywords="bioinformatics",
       url="https://github.com/biowdl/chunked-scatter",
       author="Leiden University Medical Center",
@@ -47,5 +49,6 @@ setup(name="chunked-scatter",
       package_dir={'': 'src'},
       entry_points={
           "console_scripts":
-              ["chunked-scatter=chunked_scatter.chunked_scatter:main"]
+              ["chunked-scatter=chunked_scatter.chunked_scatter:main",
+               "scatter-regions=chunked_scatter.scatter_regions:main"]
       })

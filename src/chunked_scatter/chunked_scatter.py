@@ -20,140 +20,135 @@
 
 import argparse
 from pathlib import Path
-from typing import TextIO
+from typing import Generator, Iterable, List
+
+from .parsers import BedRegion, file_to_regions
 
 
-def dict_chunker(in_file: TextIO, chunk_size: int, overlap: int):
+def region_chunker(regions: Iterable[BedRegion], chunk_size: int, overlap: int
+                   ) -> Generator[BedRegion, None, None]:
     """
-    Chunk the chromosomes/contigs from a dict.
-    :param in_file: The input file.
+    Converts each region into chunks if the chunk_size is smaller than the
+    region size.
+    :param regions: The regions which to chunk.
     :param chunk_size: The size of the chunks.
     :param overlap: The size of the overlap between chunks.
+    :return: The new chunked regions.
     """
-    for line in in_file.readlines():
-        fields = line.split()
-        if fields[0] == "@SQ":
-            for field in fields:
-                if field.startswith("LN"):
-                    length = int(field[3:])
-                elif field.startswith("SN"):
-                    name = field[3:]
-            # This will cause the last chunk to be between 0.5 and 1.5
-            # times the chunk_size in length, this way we avoid the
-            # possibility that the last chunk ends up being to small
-            # (eg. 1+overlap bases).
-            position = 0
-            while position + chunk_size*1.5 < length:
-                if position-overlap <= 0:
-                    yield [name, 0, int(position+chunk_size)]
-                else:
-                    yield [name, int(position-overlap),
-                           int(position+chunk_size)]
-                position += chunk_size
-            if position-overlap <= 0:
-                yield [name, 0, length]
+    for contig, start, end in regions:
+        position = start
+        # This will cause the last chunk to be between 0.5 and 1.5
+        # times the chunk_size in length, this way we avoid the
+        # possibility that the last chunk ends up being to small
+        # (eg. 1+overlap bases).
+        while position + chunk_size * 1.5 < end:
+            if position - overlap <= start:
+                yield BedRegion(contig, start, int(position + chunk_size))
             else:
-                yield [name, int(position-overlap), length]
+                yield BedRegion(contig, int(position - overlap),
+                                int(position + chunk_size))
+            position += chunk_size
+        if position - overlap <= start:
+            yield BedRegion(contig, start, end)
+        else:
+            yield BedRegion(contig, int(position - overlap), end)
 
 
-def bed_chunker(in_file: TextIO, chunk_size: int, overlap: int):
+def chunked_scatter(regions: Iterable[BedRegion],
+                    chunk_size: int,
+                    overlap: int,
+                    minimum_base_pairs: int,
+                    contigs_can_be_split: bool = False,
+                    ) -> Generator[List[BedRegion], None, None]:
     """
-    Chunk the entries of the bed file.
-    :param in_file: The input file.
-    :param chunk_size: The size of the chunks.
-    :param overlap: The size of the overlap between chunks.
+    Scatter regions in chunks with an overlap. It returns Lists of regions
+    where each list of regions has the regions describe at least the amount
+    of base pairs in minimum bas pairs. Except the last list.
+    :param regions: The regions which to chunk.
+    :param chunk_size: The size of each chunk.
+    :param overlap: How much overlap there should be between chunks.
+    :param minimum_base_pairs: What the minimum amount of base pairs should be
+    that the regions encompass per List.
+    :param contigs_can_be_split: Whether contigs (chr1, for example) are
+    allowed to be split across multiple lists.
+    :return: Lists of BedRegions, which can be converted into BED files.
     """
-    for line in in_file.readlines():
-        fields = line.strip().split("\t")
-        if fields[0] not in ["browser", "track"] and len(line) >= 3:
-            start = int(fields[1])
-            end = int(fields[2])
-            name = fields[0]
-            position = start
-            # This will cause the last chunk to be between 0.5 and 1.5
-            # times the chunk_size in length, this way we avoid the
-            # possibility that the last chunk ends up being to small
-            # (eg. 1+overlap bases).
-            while position + chunk_size*1.5 < end:
-                if position-overlap <= start:
-                    yield [name, start, int(position+chunk_size)]
-                else:
-                    yield [name, int(position-overlap),
-                           int(position+chunk_size)]
-                position += chunk_size
-            if position-overlap <= start:
-                yield [name, start, end]
-            else:
-                yield [name, int(position-overlap), end]
-
-
-def input_is_bed(filename: Path):
-    """
-    Check whether or not the input file is a bed file.
-    :param filename: The filename.
-    """
-    if filename.suffix == ".bed":
-        return True
-    elif filename.suffix == ".dict":
-        return False
-    else:
-        raise ValueError(
-            "Only files with .bed or .dict extensions are supported.")
-
-
-def main():
-    args = parse_args()
-    bed_input = input_is_bed(args.input)
-    current_scatter = 0
     current_scatter_size = 0
     current_contig = None
-    current_contents = str()
-    with args.input.open("r") as in_file:
-        if bed_input:
-            chunks = bed_chunker(in_file, args.chunk_size, args.overlap)
-        else:
-            chunks = dict_chunker(in_file, args.chunk_size, args.overlap)
+    chunk_list: List[BedRegion] = []
+    for chunk in region_chunker(regions, chunk_size, overlap):
+        # If the next chunk is on a different contig
+        if contigs_can_be_split or chunk.contig != current_contig:
+            current_contig = chunk.contig
+            # and the current bed file contains enough bases
+            if current_scatter_size >= minimum_base_pairs:
+                yield chunk_list
+                chunk_list = []
+                current_scatter_size = 0
+        # Add the chunk to the bed file
+        chunk_list.append(chunk)
+        current_scatter_size += (chunk.end-chunk.start)
+    # If there are leftovers yield them.
+    if chunk_list:
+        yield chunk_list
 
-        for chunk in chunks:
-            # If the next chunk is on a different contig
-            if chunk[0] != current_contig:
-                current_contig = chunk[0]
-                # and the current bed file contains enough bases
-                if current_scatter_size >= args.minimum_bp_per_file:
-                    # write the bed file
-                    with open("{}{}.bed".format(args.prefix, current_scatter),
-                              "w") as out_file:
-                        out_file.write(current_contents)
-                    # and start compiling the next bed file
-                    current_scatter += 1
-                    current_scatter_size = 0
-                    current_contents = str()
-            # Add the chunk to the bed file
-            current_contents += "{}\t{}\t{}\n".format(chunk[0], chunk[1],
-                                                      chunk[2])
-            current_scatter_size += (chunk[2]-chunk[1])
-    # Write last bed file
-    with open("{}{}.bed".format(args.prefix, current_scatter),
-              "w") as out_file:
-        out_file.write(current_contents)
+
+def region_lists_to_scatter_files(region_lists: Iterable[List[BedRegion]],
+                                  prefix: str) -> List[str]:
+    """
+    Convert lists of BedRegions to '{prefix}{number}.bed' files. The number
+    starts at 0 and is increased with 1 for each file.
+    :param region_lists: The region lists to be converted into BED files.
+    :param prefix: The filename prefix for the BedFiles
+    :return: A list of filenames of the written paths.
+    """
+    parent_dir = Path(prefix).parent
+    if not parent_dir.exists():
+        parent_dir.mkdir(parents=True)
+    output_files: List[str] = []
+    for scatter_number, region_list in enumerate(region_lists):
+        out_file = f"{prefix}{scatter_number}.bed"
+        with open(out_file, "wt") as out_file_h:
+            for bed_region in region_list:
+                out_file_h.write(str(bed_region) + '\n')
+        # I much prefer yield out_file instead. But this means the function
+        # won't do anything until it is iterated over, which is not nice.
+        output_files.append(out_file)
+    return output_files
+
+
+def common_parser() -> argparse.ArgumentParser:
+    """Commmon arguments for chunked-scatter and scatter-regions."""
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-p", "--prefix", type=str, default="scatter-",
+                        help="The prefix of the ouput files. Output will be "
+                        "named like: <PREFIX><N>.bed, in which N is an "
+                        "incrementing number. Default 'scatter-'.")
+    parser.add_argument("input", metavar="INPUT", type=Path,
+                        help="The input file, either a bed file or a sequence "
+                        "dict. Which format is used is detected by the "
+                        "extension: '.bed', '.fai' or '.dict'. This option is "
+                        "mandatory.")
+    parser.add_argument("-S", "--split-contigs", action="store_true",
+                        help="If set, contigs are allowed to be split up over "
+                             "multiple files.")
+    parser.add_argument("-P", "--print-paths", action="store_true",
+                        help="If set prints paths of the output files to "
+                             "STDOUT. This makes the program usable in "
+                             "scripts and worfklows.")
+    return parser
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(
-        description="Given a sequence dict or a bed file, scatter over the "
+    """Argument parser for the chunked-scatter program."""
+    parser = common_parser()
+    parser.description = (
+        "Given a sequence dict, fasta index or a bed file, scatter over the "
         "defined contigs/regions. Each contig/region will be split into "
         "multiple overlapping regions, which will be written to a new bed "
         "file. Each contig will be placed in a new file, unless the length of "
         "the contigs/regions doesn't exceed a given number.")
-    parser.add_argument("-p", "--prefix", type=str, required=True,
-                        help="The prefix of the ouput files. Output will be "
-                        "named like: <PREFIX><N>.bed, in which N is an "
-                        "incrementing number. This option is mandatory.")
-    parser.add_argument("-i", "--input", type=Path, required=True,
-                        help="The input file, either a bed file or a sequence "
-                        "dict. Which format is used is detected by the "
-                        "extension: '.bed' or '.dict'. This option is "
-                        "mandatory.")
+
     parser.add_argument("-c", "--chunk-size", type=int, default=1e6,
                         metavar="SIZE",
                         help="The size of the chunks. The first chunk in a "
@@ -177,5 +172,16 @@ def parse_args():
     return args
 
 
-if __name__ == "__main__":
+def main():
+    args = parse_args()
+    scattered_chunks = chunked_scatter(file_to_regions(args.input),
+                                       args.chunk_size, args.overlap,
+                                       args.minimum_bp_per_file,
+                                       args.split_contigs)
+    out_files = region_lists_to_scatter_files(scattered_chunks, args.prefix)
+    if args.print_paths:
+        print("\n".join(out_files))
+
+
+if __name__ == "__main__":  # pragma: no cover
     main()

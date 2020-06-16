@@ -17,17 +17,28 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-
 from pathlib import Path
+from typing import List
 
-from chunked_scatter.chunked_scatter import dict_chunker
+from chunked_scatter.chunked_scatter import BedRegion, \
+    region_lists_to_scatter_files
 
 
-datadir = Path(__file__).parent / Path("data")
+def test_bed_writer(tmpdir):
+    temp = Path(str(tmpdir))
+    temp.rmdir()  # Delete to test if function makes the dir.
+    region_lists: List[List[BedRegion]] = [
+        [BedRegion("sparta", 0, 300),
+         BedRegion("persians", 0, 100_000)],
+        # But if you actually read Herodotus, the story seems much more likely:
+        [BedRegion("sparta_and_allies", 0, 4300),
+         BedRegion("persian_casualties", 0, 20000)]
+    ]
 
-
-def test_dict_chunker():
-    chunks = dict_chunker((datadir / Path("ref.dict")).open("r"), 1e6, 150)
-    expected_output = [["chr1", 0, 1e6], ["chr1", 999850, 2e6],
-                       ["chr1", 1999850, 3e6], ["chr2", 0, 5e5]]
-    assert list(chunks) == expected_output
+    region_lists_to_scatter_files(region_lists, str(temp / "scatter-"))
+    assert Path(temp, "scatter-0.bed").exists()
+    assert Path(temp, "scatter-0.bed").read_text() == (
+        "sparta\t0\t300\npersians\t0\t100000\n")
+    assert Path(temp, "scatter-1.bed").exists()
+    assert Path(temp, "scatter-1.bed").read_text() == (
+        "sparta_and_allies\t0\t4300\npersian_casualties\t0\t20000\n")
