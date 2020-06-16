@@ -104,7 +104,7 @@ chr2	5000	10000
 
 The command:
 ```
-chunked-scatter -p /data/scatter_ -i /data/regions.bed -m 1000 -c 5000
+chunked-scatter -p /data/scatter_ -m 1000 -c 5000 /data/regions.bed
 ```
 
 Will produce the following two output files:
@@ -129,7 +129,7 @@ Given a dict file located at `/data/ref.dict`:
 
 The command:
 ```
-chunked-scatter -p /data/scatter_ -i /data/regions.bed
+chunked-scatter -p /data/scatter_ /data/regions.bed
 ```
 
 Will produce the following output file at `/data/scatter_0.bed`:
