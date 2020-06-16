@@ -3,7 +3,7 @@ Changelog
 ==========
 
 
-version 0.2.0-dev
+version 0.2.0
 ---------------------------
 + The ``--input`` has now been abolished in favor of a positional input
   argument.
