@@ -32,6 +32,9 @@ class BedRegion(NamedTuple):
     def __str__(self):
         return f"{self.contig}\t{self.start}\t{self.end}"
 
+    def __len__(self):
+        return self.end - self.start
+
 
 def dict_file_to_regions(in_file: Union[str, os.PathLike]
                          ) -> Generator[BedRegion, None, None]:
