@@ -40,7 +40,10 @@ setup(name="chunked-scatter",
         "License :: OSI Approved :: MIT License",
       ],
       python_requires=">=3.6",
-      install_requires=["pysam"],
+      # This pysam version supports vcf and not much changes to the interface
+      # after this release.
+      # pysam has much less dependencies than cyvcf2
+      install_requires=["pysam>=0.11.2"],
       keywords="bioinformatics",
       url="https://github.com/biowdl/chunked-scatter",
       author="Leiden University Medical Center",
