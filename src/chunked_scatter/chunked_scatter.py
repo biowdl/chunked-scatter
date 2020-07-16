@@ -57,7 +57,8 @@ def region_chunker(regions: Iterable[BedRegion], chunk_size: int, overlap: int
 def chunked_scatter(regions: Iterable[BedRegion],
                     chunk_size: int,
                     overlap: int,
-                    minimum_base_pairs: int,
+                    list_size: int,
+                    size_is_maximum: bool = False,
                     contigs_can_be_split: bool = False,
                     ) -> Generator[List[BedRegion], None, None]:
     """
@@ -67,8 +68,9 @@ def chunked_scatter(regions: Iterable[BedRegion],
     :param regions: The regions which to chunk.
     :param chunk_size: The size of each chunk.
     :param overlap: How much overlap there should be between chunks.
-    :param minimum_base_pairs: What the minimum amount of base pairs should be
+    :param list_size: What the minimum amount of base pairs should be
     that the regions encompass per List.
+    :param size_is_maximum: Use list_size as a maximum instead of a minimum
     :param contigs_can_be_split: Whether contigs (chr1, for example) are
     allowed to be split across multiple lists.
     :return: Lists of BedRegions, which can be converted into BED files.
@@ -81,13 +83,19 @@ def chunked_scatter(regions: Iterable[BedRegion],
         if contigs_can_be_split or chunk.contig != current_contig:
             current_contig = chunk.contig
             # and the current bed file contains enough bases
-            if current_scatter_size >= minimum_base_pairs:
+            minimum_reached = current_scatter_size >= list_size
+            maximum_reached = current_scatter_size + len(chunk) >= list_size
+            # Yield if the minimum is reached, or if current chunk will
+            # overflow the size and there is at least one chunk already.
+            if (minimum_reached and not size_is_maximum) or (
+                    maximum_reached and size_is_maximum and len(chunk_list) > 0
+            ):
                 yield chunk_list
                 chunk_list = []
                 current_scatter_size = 0
         # Add the chunk to the bed file
         chunk_list.append(chunk)
-        current_scatter_size += (chunk.end-chunk.start)
+        current_scatter_size += len(chunk)
     # If there are leftovers yield them.
     if chunk_list:
         yield chunk_list
@@ -177,7 +185,8 @@ def main():
     scattered_chunks = chunked_scatter(file_to_regions(args.input),
                                        args.chunk_size, args.overlap,
                                        args.minimum_bp_per_file,
-                                       args.split_contigs)
+                                       size_is_maximum=False,
+                                       contigs_can_be_split=args.split_contigs)
     out_files = region_lists_to_scatter_files(scattered_chunks, args.prefix)
     if args.print_paths:
         print("\n".join(out_files))

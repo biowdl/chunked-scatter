@@ -69,8 +69,9 @@ def scatter_regions(regions: Iterable[BedRegion],
     """
     region_lists = chunked_scatter(regions,
                                    chunk_size=scattersize,
-                                   minimum_base_pairs=scattersize,
+                                   list_size=scattersize,
                                    overlap=0,
+                                   size_is_maximum=True,
                                    contigs_can_be_split=contigs_can_be_split)
     for region_list in region_lists:
         yield list(merge_regions(region_list))
