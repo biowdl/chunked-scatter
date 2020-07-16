@@ -83,13 +83,10 @@ def chunked_scatter(regions: Iterable[BedRegion],
         if contigs_can_be_split or chunk.contig != current_contig:
             current_contig = chunk.contig
             # and the current bed file contains enough bases
-            minimum_reached = current_scatter_size >= list_size
-            maximum_reached = current_scatter_size + len(chunk) >= list_size
             # Yield if the minimum is reached, or if current chunk will
             # overflow the size and there is at least one chunk already.
-            if (minimum_reached and not size_is_maximum) or (
-                    maximum_reached and size_is_maximum and len(chunk_list) > 0
-            ):
+            size_to_check = current_scatter_size + len(chunk) if size_is_maximum else current_scatter_size
+            if size_to_check >= list_size and len(chunk_list) > 0:
                 yield chunk_list
                 chunk_list = []
                 current_scatter_size = 0
