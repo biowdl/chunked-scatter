@@ -2,6 +2,10 @@
 Changelog
 ==========
 
+version 1.0.0-dev
+---------------------------
++ scatter-regions now uses maximum size instead of minimum size for its scatter
+  sizes. This leads to a more even distribution.
 
 version 0.2.0
 ---------------------------

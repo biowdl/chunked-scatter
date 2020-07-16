@@ -43,7 +43,8 @@ def test_adjacent_regions(regions, result):
 
 
 def test_scatter_regions():
-    result = list(scatter_regions(DICT_REGIONS, 1_000_000))
+    result = list(scatter_regions(DICT_REGIONS, 3_200_000))
+    # We should not overflow the scattersize.
     assert result == [
         [BedRegion("chr1", 0, 3_000_000)],
         [BedRegion("chr2", 0, 500_000)]
@@ -55,6 +56,6 @@ def test_scatter_regions_split_contigs():
     assert result == [
         [BedRegion("chr1", 0, 1_100_000)],
         [BedRegion("chr1", 1_100_000, 2_200_000)],
-        [BedRegion("chr1", 2_200_000, 3_000_000),
-         BedRegion("chr2", 0, 500_000)]
+        [BedRegion("chr1", 2_200_000, 3_000_000)],
+        [BedRegion("chr2", 0, 500_000)]
     ]
