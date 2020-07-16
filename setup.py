@@ -24,7 +24,7 @@ with open("README.md", "r") as readme_file:
     LONG_DESCRIPTION = readme_file.read()
 
 setup(name="chunked-scatter",
-      version="1.0.0",
+      version="1.1.0-dev",
       description="Chunk and scatter the regions in a bed or sequence dict "
                   "file",
       long_description=LONG_DESCRIPTION,
