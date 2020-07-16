@@ -19,8 +19,13 @@
 # SOFTWARE.
 
 import os
-from pathlib import Path
 from typing import Generator, NamedTuple, Optional, Union
+
+from pysam import VariantFile, VariantRecord
+
+# Add extensions here so they can be used troughout the project for messages.
+SUPPORTED_EXTENSIONS = [".bed", ".dict", ".fai", ".vcf", ".vcf.gz", ".bcf"]
+SUPPORTED_EXTENSIONS_STRING = "'" + "', '".join(SUPPORTED_EXTENSIONS) + "'"
 
 
 class BedRegion(NamedTuple):
@@ -90,13 +95,27 @@ def fai_file_to_regions(in_file: Union[str, os.PathLike]
             yield BedRegion(name, 0, int(length))
 
 
-def file_to_regions(in_file: Path):
-    if in_file.suffix == ".bed":
+def vcf_file_to_regions(in_file: Union[str, os.PathLike]):
+    vcf = VariantFile(in_file, mode="r")
+    try:  # VariantFile automatically opens file
+        for variant in vcf:  # type: VariantRecord
+            yield BedRegion(variant.contig, variant.start, variant.stop)
+    finally:
+        # Make sure vcf is always closed
+        vcf.close()
+
+
+def file_to_regions(in_file: Union[str, os.PathLike]):
+    base, extension = os.path.splitext(in_file)
+    if extension == ".bed":
         return bed_file_to_regions(in_file)
-    elif in_file.suffix == ".dict":
+    elif extension == ".dict":
         return dict_file_to_regions(in_file)
-    elif in_file.suffix == ".fai":
+    elif extension == ".fai":
         return fai_file_to_regions(in_file)
+    elif extension in (".vcf", ".bcf", ".vcf.gz"):
+        return vcf_file_to_regions(in_file)
     else:
         raise NotImplementedError(
-            "Only files with .bed, .fai or .dict extensions are supported.")
+            f"Unkown extension '{extension}' for file: '{in_file}'. Supported "
+            f"extensions are: {SUPPORTED_EXTENSIONS_STRING}.")

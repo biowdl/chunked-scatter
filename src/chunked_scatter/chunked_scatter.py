@@ -22,7 +22,7 @@ import argparse
 from pathlib import Path
 from typing import Generator, Iterable, List
 
-from .parsers import BedRegion, file_to_regions
+from .parsers import BedRegion, SUPPORTED_EXTENSIONS_STRING, file_to_regions
 
 
 def region_chunker(regions: Iterable[BedRegion], chunk_size: int, overlap: int
@@ -129,11 +129,10 @@ def common_parser() -> argparse.ArgumentParser:
                         help="The prefix of the ouput files. Output will be "
                         "named like: <PREFIX><N>.bed, in which N is an "
                         "incrementing number. Default 'scatter-'.")
-    parser.add_argument("input", metavar="INPUT", type=Path,
-                        help="The input file, either a bed file or a sequence "
-                        "dict. Which format is used is detected by the "
-                        "extension: '.bed', '.fai' or '.dict'. This option is "
-                        "mandatory.")
+    parser.add_argument("input", metavar="INPUT", type=str,
+                        help=f"The input file. The format is detected by the "
+                             f"extension. Supported extensions are: "
+                             f"{SUPPORTED_EXTENSIONS_STRING}.")
     parser.add_argument("-S", "--split-contigs", action="store_true",
                         help="If set, contigs are allowed to be split up over "
                              "multiple files.")

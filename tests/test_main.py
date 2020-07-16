@@ -65,7 +65,7 @@ def test_dict_input(tmpdir):
 def test_parse_args():
     sys.argv = ["script", "input.bed"]
     args = parse_args()
-    assert args.input == Path("input.bed")
+    assert args.input == "input.bed"
     assert args.prefix == "scatter-"
     assert args.chunk_size == 1e6
     assert args.minimum_bp_per_file == 45e6
