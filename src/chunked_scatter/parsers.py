@@ -21,6 +21,9 @@
 import os
 from typing import Generator, NamedTuple, Optional, Union
 
+from pysam import VariantFile, VariantRecord
+
+
 class BedRegion(NamedTuple):
     """A class that contains a region described as in the BED file format."""
     contig: str
@@ -85,6 +88,16 @@ def fai_file_to_regions(in_file: Union[str, os.PathLike]
             yield BedRegion(name, 0, int(length))
 
 
+def vcf_file_to_regions(in_file: Union[str, os.PathLike]):
+    vcf = VariantFile(in_file, mode="r")
+    try:  # VariantFile automatically opens file
+        for variant in vcf:  # type: VariantRecord
+            yield BedRegion(variant.contig, variant.start, variant.stop)
+    finally:
+        # Make sure vcf is always closed
+        vcf.close()
+
+
 def file_to_regions(in_file: Union[str, os.PathLike]):
     base, extension = os.path.splitext(in_file)
     if extension == ".bed":
@@ -93,6 +106,9 @@ def file_to_regions(in_file: Union[str, os.PathLike]):
         return dict_file_to_regions(in_file)
     elif extension == ".fai":
         return fai_file_to_regions(in_file)
+    elif extension in (".vcf", ".bcf", ".vcf.gz"):
+        return vcf_file_to_regions(in_file)
     else:
         raise NotImplementedError(
-            "Only files with .bed, .fai or .dict extensions are supported.")
+            f"Unkown extension '{extension}' for file: '{in_file}'. Please "
+            f"check the documentation for supported file formats.")
