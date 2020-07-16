@@ -88,9 +88,10 @@ optional arguments:
                         This makes the program usable in scripts and
                         worfklows.
   -s SCATTER_SIZE, --scatter-size SCATTER_SIZE
-                        How large the regions over which to scatter should be.
-                        Default: 1000000000.
-
+                        The maximum size for the regions over which to
+                        scatter. If contigs are not split, and a contig is
+                        bigger than the maximum size, the contig will be
+                        placed in its own file. Default: 1000000000.
 ```
 
 ## Examples
