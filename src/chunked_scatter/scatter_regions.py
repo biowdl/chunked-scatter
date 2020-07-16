@@ -86,8 +86,11 @@ def argument_parser() -> argparse.ArgumentParser:
         "approximately to the given scatter size.")
     parser.add_argument("-s", "--scatter-size", type=int,
                         default=DEFAULT_SCATTER_SIZE,
-                        help=f"How large the regions over which to scatter "
-                             f"should be. Default: {DEFAULT_SCATTER_SIZE}.")
+                        help=f"The maximum size for the regions over which to "
+                             f"scatter. If contigs are not split, and a "
+                             f"contig is bigger than the maximum size, the "
+                             f"contig will be placed in its own file. "
+                             f"Default: {DEFAULT_SCATTER_SIZE}.")
     return parser
 
 
