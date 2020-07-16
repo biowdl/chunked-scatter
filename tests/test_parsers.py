@@ -64,8 +64,7 @@ def test_file_to_regions_vcf():
 
 
 def test_file_to_regions_wrong_ext(capsys):
-    with pytest.raises(
-            NotImplementedError,
-            match="Unkown extension '' for file: 'input'. Please check the "
-                  "documentation for supported file formats."):
+    with pytest.raises(NotImplementedError) as error:
         file_to_regions("input")
+    error.match("Unkown extension '' for file: 'input'. Supported extensions "
+                "are:")

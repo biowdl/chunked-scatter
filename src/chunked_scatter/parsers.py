@@ -23,6 +23,10 @@ from typing import Generator, NamedTuple, Optional, Union
 
 from pysam import VariantFile, VariantRecord
 
+# Add extensions here so they can be used troughout the project for messages.
+SUPPORTED_EXTENSIONS = [".bed", ".dict", ".fai", ".vcf", ".vcf.gz", ".bcf"]
+SUPPORTED_EXTENSIONS_STRING = "'" + "', '".join(SUPPORTED_EXTENSIONS) + "'"
+
 
 class BedRegion(NamedTuple):
     """A class that contains a region described as in the BED file format."""
@@ -113,5 +117,5 @@ def file_to_regions(in_file: Union[str, os.PathLike]):
         return vcf_file_to_regions(in_file)
     else:
         raise NotImplementedError(
-            f"Unkown extension '{extension}' for file: '{in_file}'. Please "
-            f"check the documentation for supported file formats.")
+            f"Unkown extension '{extension}' for file: '{in_file}'. Supported "
+            f"extensions are: {SUPPORTED_EXTENSIONS_STRING}.")
