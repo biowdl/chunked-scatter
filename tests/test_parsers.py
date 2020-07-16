@@ -53,6 +53,16 @@ def test_file_to_regions_fai():
     ]
 
 
+def test_file_to_regions_vcf():
+    result = list(file_to_regions(datadir / "example.vcf"))
+    assert result == [
+        BedRegion("22", 499, 500),
+        BedRegion("22", 999, 1000),
+        BedRegion("22", 1001, 1002),
+        BedRegion("22", 1099, 1101)
+    ]
+
+
 def test_file_to_regions_wrong_ext(capsys):
     with pytest.raises(
             NotImplementedError,
