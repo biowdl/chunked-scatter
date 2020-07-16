@@ -65,7 +65,7 @@ def test_dict_input(tmpdir):
 def test_parse_args():
     sys.argv = ["script", "input.bed"]
     args = parse_args()
-    assert args.input == Path("input.bed")
+    assert args.input == "input.bed"
     assert args.prefix == "scatter-"
     assert args.chunk_size == 1e6
     assert args.minimum_bp_per_file == 45e6
@@ -83,8 +83,9 @@ def test_scatter_regions_main(tmpdir, capsys):
     assert Path(str(tmpdir), "scatters", "scatter-0.bed").exists()
     assert Path(str(tmpdir), "scatters", "scatter-1.bed").exists()
     assert Path(str(tmpdir), "scatters", "scatter-2.bed").exists()
+    assert Path(str(tmpdir), "scatters", "scatter-3.bed").exists()
     assert Path(str(tmpdir), "scatters", "scatter-2.bed").read_text() == (
-        "chr1\t2200000\t3000000\nchr2\t0\t500000\n"
+        "chr1\t2200000\t3000000\n"
     )
     captured = capsys.readouterr()
     assert str(Path(str(tmpdir), "scatters", "scatter-0.bed")) in captured.out

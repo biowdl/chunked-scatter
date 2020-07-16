@@ -1,7 +1,7 @@
 # chunked-scatter and scatter-regions
 
-The `chunked-scatter` tool takes a bed file, fasta index, or sequence dictionary as input 
-and divides the
+The `chunked-scatter` tool takes a bed file, fasta index, sequence dictionary 
+or vcf file as input and divides the
 contigs/chromosomes into overlapping chunks of a given size. These chunks will
 then be placed in new bed files, one chromosomes per file. Small chromosomes
 will be put together to avoid the creation of thousands of files.
@@ -30,9 +30,9 @@ in a new file, unless the length of the contigs/regions doesn't exceed a given
 number.
 
 positional arguments:
-  INPUT                 The input file, either a bed file or a sequence dict.
-                        Which format is used is detected by the extension:
-                        '.bed', '.fai' or '.dict'. This option is mandatory.
+  INPUT                 The input file. The format is detected by the
+                        extension. Supported extensions are: '.bed', '.dict',
+                        '.fai', '.vcf', '.vcf.gz', '.bcf'.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -72,9 +72,9 @@ contigs/regions. Creates a bed file where the contigs add up approximately to
 the given scatter size.
 
 positional arguments:
-  INPUT                 The input file, either a bed file or a sequence dict.
-                        Which format is used is detected by the extension:
-                        '.bed', '.fai' or '.dict'. This option is mandatory.
+  INPUT                 The input file. The format is detected by the
+                        extension. Supported extensions are: '.bed', '.dict',
+                        '.fai', '.vcf', '.vcf.gz', '.bcf'.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -88,9 +88,10 @@ optional arguments:
                         This makes the program usable in scripts and
                         worfklows.
   -s SCATTER_SIZE, --scatter-size SCATTER_SIZE
-                        How large the regions over which to scatter should be.
-                        Default: 1000000000.
-
+                        The maximum size for the regions over which to
+                        scatter. If contigs are not split, and a contig is
+                        bigger than the maximum size, the contig will be
+                        placed in its own file. Default: 1000000000.
 ```
 
 ## Examples

@@ -69,8 +69,9 @@ def scatter_regions(regions: Iterable[BedRegion],
     """
     region_lists = chunked_scatter(regions,
                                    chunk_size=scattersize,
-                                   minimum_base_pairs=scattersize,
+                                   list_size=scattersize,
                                    overlap=0,
+                                   size_is_maximum=True,
                                    contigs_can_be_split=contigs_can_be_split)
     for region_list in region_lists:
         yield list(merge_regions(region_list))
@@ -85,8 +86,11 @@ def argument_parser() -> argparse.ArgumentParser:
         "approximately to the given scatter size.")
     parser.add_argument("-s", "--scatter-size", type=int,
                         default=DEFAULT_SCATTER_SIZE,
-                        help=f"How large the regions over which to scatter "
-                             f"should be. Default: {DEFAULT_SCATTER_SIZE}.")
+                        help=f"The maximum size for the regions over which to "
+                             f"scatter. If contigs are not split, and a "
+                             f"contig is bigger than the maximum size, the "
+                             f"contig will be placed in its own file. "
+                             f"Default: {DEFAULT_SCATTER_SIZE}.")
     return parser
 
 

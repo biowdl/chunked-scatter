@@ -2,6 +2,13 @@
 Changelog
 ==========
 
+version 1.0.0
+---------------------------
++ VCF files can now also be used as input files. `Pysam
+  <https://github.com/pysam-developers/pysam>`_ was used to implement this
+  functionality.
++ scatter-regions now uses maximum size instead of minimum size for its scatter
+  sizes. This leads to a more even distribution.
 
 version 0.2.0
 ---------------------------
