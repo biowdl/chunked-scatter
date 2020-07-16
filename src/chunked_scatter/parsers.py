@@ -19,9 +19,7 @@
 # SOFTWARE.
 
 import os
-from pathlib import Path
 from typing import Generator, NamedTuple, Optional, Union
-
 
 class BedRegion(NamedTuple):
     """A class that contains a region described as in the BED file format."""
@@ -87,12 +85,13 @@ def fai_file_to_regions(in_file: Union[str, os.PathLike]
             yield BedRegion(name, 0, int(length))
 
 
-def file_to_regions(in_file: Path):
-    if in_file.suffix == ".bed":
+def file_to_regions(in_file: Union[str, os.PathLike]):
+    base, extension = os.path.splitext(in_file)
+    if extension == ".bed":
         return bed_file_to_regions(in_file)
-    elif in_file.suffix == ".dict":
+    elif extension == ".dict":
         return dict_file_to_regions(in_file)
-    elif in_file.suffix == ".fai":
+    elif extension == ".fai":
         return fai_file_to_regions(in_file)
     else:
         raise NotImplementedError(
