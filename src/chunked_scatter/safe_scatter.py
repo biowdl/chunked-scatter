@@ -124,8 +124,27 @@ def safe_scatter(regions: List[BedRegion],
     allowed to be split across multiple lists.
     :return: Yields lists of BedRegions which can be converted into bed files.
     """
+    # What is the target size for the bins?
     target_bin_size = determine_bin_size(regions, scatter_count)
-    print(target_bin_size)
+
+    if target_bin_size < min_scatter_size:
+        msg = (f"--min-scatter-size is not compatible with the provided "
+               f"regions and number of bins ({min_scatter_size} > "
+               f"{target_bin_size})")
+        raise RuntimeError(msg)
+
+    # Where we store all bins
+    current_bin = list()
+    current_bin_size = 0
+
+    for region in scatter_regions(regions, min_scatter_size):
+        if current_bin_size + len(region) > target_bin_size:
+            yield list(merge_regions(current_bin))
+            current_bin = [region]
+            current_bin_size = len(region)
+        else:
+            current_bin.append(region)
+            current_bin_size += len(region)
 
 
 def argument_parser() -> argparse.ArgumentParser:

@@ -80,6 +80,11 @@ SCATTER_REGIONS_INVALID = [
     ([BedRegion("chr1", 0, 5)], 0.2)
 ]
 
+# region, scatter_count, scatter_size
+SAFE_SCATTER_INVALID = [
+    ([BedRegion("chr1", 0, 100)], 4, 100)
+]
+
 
 @pytest.mark.parametrize(["regions", "result"], MERGE_REGION_TESTS)
 def test_adjacent_regions(regions, result):
@@ -111,3 +116,11 @@ def test_scatter_regions(regions, min_scatter_size, result):
 def test_scatter_regions_sanity(regions, min_scatter_size):
     with pytest.raises(RuntimeError):
         next(safe_scatter.scatter_regions(regions, min_scatter_size))
+
+
+@pytest.mark.parametrize(["regions", "scatter_count", "min_scatter_size"],
+                         SAFE_SCATTER_INVALID)
+def test_safe_scatter_sanity(regions, scatter_count, min_scatter_size):
+    with pytest.raises(RuntimeError):
+        next(safe_scatter.safe_scatter(regions, scatter_count,
+             min_scatter_size))
