@@ -172,11 +172,12 @@ def argument_parser() -> argparse.ArgumentParser:
         "defined contigs/regions. Creates a bed file where the contigs add up "
         "to the average scatter size to within min_scatter_size. NOTE, this "
         "tool always splits up contigs.")
+    parser.formatter_class = argparse.ArgumentDefaultsHelpFormatter
     parser.add_argument("-c", "--scatter-count", type=int,
                         default=50,
-                        help="The number of chunks to scatter the regions in."
+                        help="The number of chunks to scatter the regions in. "
                              "All chunks will be within --min-scatter-size "
-                             "of each other.")
+                             "of each other except for the final chunk.")
     parser.add_argument("-m", "--min-scatter-size", type=int,
                         default=10000,
                         help="The minimum size of a scatter. This tool will "
@@ -189,10 +190,10 @@ def argument_parser() -> argparse.ArgumentParser:
                             "Shuffle the regions before scattering. This can "
                             "be useful in case there is a bias in the "
                             "composition of the regions. For example, the "
-                            "human reference genome has unplaced contigs that "
-                            "are difficult to variantcall at the end of the "
-                            "file, which means they all end up in the same "
-                            "bin. Enabling shuffling prevents this."
+                            "human reference genome has all unplaced contigs "
+                            "(which are more difficult to process) at the end "
+                            "of the file, which means they all end up in the "
+                            "same bedfile. Enabling shuffling prevents this."
                         ))
     parser.add_argument("--seed", default=42,
                         help="Random seed to use when shuffling")

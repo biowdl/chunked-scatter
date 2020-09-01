@@ -9,6 +9,10 @@ will be put together to avoid the creation of thousands of files.
 The `scatter-regions` tool works in a similar way but with defaults and flags
 tuned towards creating genome scatters for GATK tools.
 
+The `safe-scatter` tool produces a more even distribution of sizes in the
+output bed files, and guarantees that none of the scatters are smaller than
+`--min-input-size`.
+
 ## Installation
 - Install using pip: `pip install chunked-scatter`
 - Install using conda: `conda install chunked-scatter`
@@ -92,6 +96,49 @@ optional arguments:
                         scatter. If contigs are not split, and a contig is
                         bigger than the maximum size, the contig will be
                         placed in its own file. Default: 1000000000.
+```
+
+### safe-scatter
+```
+usage: safe-scatter [-h] [-p PREFIX] [-P] [-c SCATTER_COUNT]
+                    [-m MIN_SCATTER_SIZE] [--shuffle] [--seed SEED]
+                    INPUT
+
+Given a sequence dict, fasta index or a bed file, scatter over the defined
+contigs/regions. Creates a bed file where the contigs add up to the average
+scatter size to within min_scatter_size. NOTE, this tool always splits up
+contigs.
+
+positional arguments:
+  INPUT                 The input file. The format is detected by the
+                        extension. Supported extensions are: '.bed', '.dict',
+                        '.fai', '.vcf', '.vcf.gz', '.bcf'.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -p PREFIX, --prefix PREFIX
+                        The prefix of the ouput files. Output will be named
+                        like: <PREFIX><N>.bed, in which N is an incrementing
+                        number. Default 'scatter-'. (default: scatter-)
+  -P, --print-paths     If set prints paths of the output files to STDOUT.
+                        This makes the program usable in scripts and
+                        worfklows. (default: False)
+  -c SCATTER_COUNT, --scatter-count SCATTER_COUNT
+                        The number of chunks to scatter the regions in. All
+                        chunks will be within --min-scatter-size of each other
+                        except for the final chunk. (default: 50)
+  -m MIN_SCATTER_SIZE, --min-scatter-size MIN_SCATTER_SIZE
+                        The minimum size of a scatter. This tool will never
+                        generate regions smaller than this value, unless the
+                        original regions aresmaller. (default: 10000)
+  --shuffle             Shuffle the regions before scattering. This can be
+                        useful in case there is a bias in the composition of
+                        the regions. For example, the human reference genome
+                        has all unplaced contigs (which are more difficult to
+                        process) at the end of the file, which means they all
+                        end up in the same bedfile. Enabling shuffling
+                        prevents this. (default: False)
+  --seed SEED           Random seed to use when shuffling (default: 42)
 ```
 
 ## Examples

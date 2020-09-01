@@ -2,6 +2,10 @@
 Changelog
 ==========
 
+version 1.1.0
+---------------------------
++ Added ``safe-scatter`` which produces a more even scattering.
+
 version 1.0.0
 ---------------------------
 + VCF files can now also be used as input files. `Pysam
