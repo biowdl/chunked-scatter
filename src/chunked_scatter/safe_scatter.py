@@ -21,8 +21,7 @@
 import argparse
 from typing import Generator, Iterable, List
 
-from .chunked_scatter import chunked_scatter, common_parser, \
-    region_lists_to_scatter_files
+from .chunked_scatter import common_parser, region_lists_to_scatter_files
 from .parsers import BedRegion, file_to_regions
 
 
@@ -53,11 +52,11 @@ def merge_regions(regions: Iterable[BedRegion]
 
 def sum_regions(regions: List[BedRegion]):
     """ Calculate the total length of all regions """
-    return sum (len(region) for region in regions)
+    return sum(len(region) for region in regions)
 
 
 def determine_bin_size(regions: List[BedRegion],
-                        scatter_count: int):
+                       scatter_count: int):
     """
     Determine the target scatter size, based on the total size of the regions
     and the number of target regions (scatter_count).
@@ -100,10 +99,10 @@ def scatter_regions(regions: List[BedRegion],
 
 
 def safe_scatter(regions: List[BedRegion],
-                    scatter_count: int,
-                    min_scatter_size: int = 10000,
-                    contigs_can_be_split: bool = True,
-                    ) -> Generator[List[BedRegion], None, None]:
+                 scatter_count: int,
+                 min_scatter_size: int = 10000,
+                 contigs_can_be_split: bool = True,
+                 ) -> Generator[List[BedRegion], None, None]:
     """
     Scatter the regions equally over the specified scatter_count.
 
@@ -126,9 +125,7 @@ def safe_scatter(regions: List[BedRegion],
     :return: Yields lists of BedRegions which can be converted into bed files.
     """
     target_bin_size = determine_bin_size(regions, scatter_count)
-
-    for region_list in region_lists:
-        yield list(merge_regions(region_list))
+    print(target_bin_size)
 
 
 def argument_parser() -> argparse.ArgumentParser:
@@ -157,9 +154,9 @@ def main():
     # We need all regions instead of an iterator
     regions = list(file_to_regions(args.input))
     scattered_chunks = safe_scatter(regions,
-                                       args.scatter_count,
-                                       args.min_scatter_size,
-                                       contigs_can_be_split=args.split_contigs)
+                                    args.scatter_count,
+                                    args.min_scatter_size,
+                                    contigs_can_be_split=args.split_contigs)
     out_files = region_lists_to_scatter_files(scattered_chunks, args.prefix)
     if args.print_paths:
         print("\n".join(out_files))

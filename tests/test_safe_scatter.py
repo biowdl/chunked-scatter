@@ -19,12 +19,9 @@
 # SOFTWARE.
 
 from chunked_scatter.chunked_scatter import BedRegion
-from chunked_scatter.safe_scatter import *
+from chunked_scatter import safe_scatter
 
 import pytest
-
-from .test_chunkers import DICT_REGIONS
-
 
 MERGE_REGION_TESTS = [
  ([BedRegion("chr1", 0, 10000), BedRegion("chr1", 10000, 20000)],
@@ -47,7 +44,7 @@ BIN_SIZE_TESTS = [
     ([BedRegion("chr1", 0, 100)], 3, 33),
     ([BedRegion("chr1", 0, 100)], 7, 14),
     ([BedRegion("chr1", 0, 100)], 9, 11),
-    ([BedRegion("chr1", 0, 50), BedRegion("chr1", 50, 100)], 9 ,11)
+    ([BedRegion("chr1", 0, 50), BedRegion("chr1", 50, 100)], 9, 11)
 ]
 
 # Region, min_scatter_size, scattered regions
@@ -62,19 +59,19 @@ SCATTER_REGIONS_TESTS = [
         BedRegion("chr1", 0, 27),
         BedRegion("chr1", 27, 54),
         BedRegion("chr1", 54, 100)]),
-     ([BedRegion("chr1", 0, 5)], 1, [
-        BedRegion("chr1", 0, 1),
-        BedRegion("chr1", 1, 2),
-        BedRegion("chr1", 2, 3),
-        BedRegion("chr1", 3, 4),
-        BedRegion("chr1", 4, 5)]),
-     ([BedRegion("chr1", 0, 2)], 1.2, [
-        BedRegion("chr1", 0, 1),
-        BedRegion("chr1", 1, 2)]),
-     ([BedRegion("chr1", 0, 10)], 20, [
-        BedRegion("chr1", 0, 10)]),
-     ([BedRegion("chr1", 0, 10), BedRegion("chr2", 0, 12)], 20, [
-        BedRegion("chr1", 0, 10), BedRegion("chr2", 0, 12)])
+    ([BedRegion("chr1", 0, 5)], 1, [
+       BedRegion("chr1", 0, 1),
+       BedRegion("chr1", 1, 2),
+       BedRegion("chr1", 2, 3),
+       BedRegion("chr1", 3, 4),
+       BedRegion("chr1", 4, 5)]),
+    ([BedRegion("chr1", 0, 2)], 1.2, [
+       BedRegion("chr1", 0, 1),
+       BedRegion("chr1", 1, 2)]),
+    ([BedRegion("chr1", 0, 10)], 20, [
+       BedRegion("chr1", 0, 10)]),
+    ([BedRegion("chr1", 0, 10), BedRegion("chr2", 0, 12)], 20, [
+       BedRegion("chr1", 0, 10), BedRegion("chr2", 0, 12)])
 ]
 
 SCATTER_REGIONS_INVALID = [
@@ -83,32 +80,34 @@ SCATTER_REGIONS_INVALID = [
     ([BedRegion("chr1", 0, 5)], 0.2)
 ]
 
+
 @pytest.mark.parametrize(["regions", "result"], MERGE_REGION_TESTS)
 def test_adjacent_regions(regions, result):
-    merged = list(merge_regions(regions))
+    merged = list(safe_scatter.merge_regions(regions))
     assert merged == result
 
 
 @pytest.mark.parametrize(["regions", "result"], SUM_REGION_TESTS)
 def test_sum_regions(regions, result):
-    sum_regions(regions) == result
+    safe_scatter.sum_regions(regions) == result
 
 
 @pytest.mark.parametrize(["regions", "scatter_count", "result"],
-        BIN_SIZE_TESTS)
+                         BIN_SIZE_TESTS)
 def test_determine_bin_size(regions, scatter_count, result):
-    assert determine_bin_size(regions, scatter_count) == result
+    assert safe_scatter.determine_bin_size(regions, scatter_count) == result
 
 
 @pytest.mark.parametrize(["regions", "min_scatter_size", "result"],
-        SCATTER_REGIONS_TESTS)
+                         SCATTER_REGIONS_TESTS)
 def test_scatter_regions(regions, min_scatter_size, result):
-    scatter_result = list(scatter_regions(regions, min_scatter_size))
+    scatter_result = list(safe_scatter.scatter_regions(regions,
+                          min_scatter_size))
     assert scatter_result == result
 
 
 @pytest.mark.parametrize(["regions", "min_scatter_size"],
-        SCATTER_REGIONS_INVALID)
+                         SCATTER_REGIONS_INVALID)
 def test_scatter_regions_sanity(regions, min_scatter_size):
     with pytest.raises(RuntimeError):
-        next(scatter_regions(regions, min_scatter_size))
+        next(safe_scatter.scatter_regions(regions, min_scatter_size))
