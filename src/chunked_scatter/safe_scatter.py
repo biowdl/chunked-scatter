@@ -19,6 +19,7 @@
 # SOFTWARE.
 
 import argparse
+import random
 from typing import Generator, Iterable, List
 
 from .chunked_scatter import common_parser, region_lists_to_scatter_files
@@ -82,7 +83,7 @@ def scatter_regions(regions: List[BedRegion],
         remaining = len(region)
 
         # If the current region is so small we cannot get 2 min_scatter_size
-        # from it, just yield the the entire region and continue
+        # from it, just yield the entire region and continue
         if remaining < 2*min_scatter_size:
             yield region
             continue
@@ -102,6 +103,8 @@ def safe_scatter(regions: List[BedRegion],
                  scatter_count: int,
                  min_scatter_size: int = 10000,
                  split_contigs: bool = True,
+                 shuffle: bool = False,
+                 seed: int = 42,
                  ) -> Generator[List[BedRegion], None, None]:
     """
     Scatter the regions equally over the specified scatter_count.
@@ -133,11 +136,16 @@ def safe_scatter(regions: List[BedRegion],
                f"{target_bin_size})")
         raise RuntimeError(msg)
 
+    # Shuffle the input regions, deterministically
+    if shuffle:
+        random.seed(seed)
+        random.shuffle(regions)
+
     # First time running
     first_time = True
 
     for region in scatter_regions(regions, min_scatter_size):
-        # If this is the first ever region we parse, initialse the bin
+        # If this is the first ever region we parse, initialise the bin
         if first_time:
             current_bin: List[BedRegion] = [region]
             current_bin_size = len(region)
@@ -176,6 +184,19 @@ def argument_parser() -> argparse.ArgumentParser:
                              "never generate regions smaller than this "
                              "value, unless the original regions are"
                              "smaller.")
+    parser.add_argument("--shuffle", default=False,
+                        action="store_true",
+                        help=(
+                            "Shuffle the regions before scattering. This can "
+                            "be useful in case there is a bias in the "
+                            "composition of the regions. For example, the "
+                            "human reference genome has unplaced contigs that "
+                            "are difficult to variantcall at the end of the "
+                            "file, which means they all end up in the same "
+                            "bin. Enabling shuffling prevents this."
+                        ))
+    parser.add_argument("--seed", default=42,
+                        help="Random seed to use when shuffling")
     return parser
 
 
@@ -185,7 +206,8 @@ def main():
     regions = list(file_to_regions(args.input))
     scattered_chunks = list(safe_scatter(regions, args.scatter_count,
                                          args.min_scatter_size,
-                                         split_contigs=args.split_contigs))
+                                         split_contigs=args.split_contigs,
+                                         shuffle=args.shuffle, seed=args.seed))
     out_files = region_lists_to_scatter_files(scattered_chunks, args.prefix)
     if args.print_paths:
         print("\n".join(out_files))
