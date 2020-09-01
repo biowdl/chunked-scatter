@@ -168,6 +168,5 @@ def test_safe_scatter(regions, scatter_count, min_scatter_size, result):
 def test_safe_scatter_shuffle(regions, scatter_count, min_scatter_size,
                               result):
     scattered_regions = list(safe_scatter.safe_scatter(regions, scatter_count,
-                             min_scatter_size, split_contigs=True,
-                             shuffle=True, seed=42))
+                             min_scatter_size, shuffle=True, seed=42))
     assert scattered_regions == result

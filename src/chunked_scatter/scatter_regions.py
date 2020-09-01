@@ -91,6 +91,9 @@ def argument_parser() -> argparse.ArgumentParser:
                              f"contig is bigger than the maximum size, the "
                              f"contig will be placed in its own file. "
                              f"Default: {DEFAULT_SCATTER_SIZE}.")
+    parser.add_argument("-S", "--split-contigs", action="store_true",
+                        help="If set, contigs are allowed to be split up over "
+                             "multiple files.")
     return parser
 
 

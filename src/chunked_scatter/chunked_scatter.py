@@ -133,9 +133,6 @@ def common_parser() -> argparse.ArgumentParser:
                         help=f"The input file. The format is detected by the "
                              f"extension. Supported extensions are: "
                              f"{SUPPORTED_EXTENSIONS_STRING}.")
-    parser.add_argument("-S", "--split-contigs", action="store_true",
-                        help="If set, contigs are allowed to be split up over "
-                             "multiple files.")
     parser.add_argument("-P", "--print-paths", action="store_true",
                         help="If set prints paths of the output files to "
                              "STDOUT. This makes the program usable in "
@@ -172,6 +169,9 @@ def parse_args():
     parser.add_argument("-o", "--overlap", type=int, default=150,
                         help="The number of bases which each chunk should "
                         "overlap with the preceding one. Defaults to 150.")
+    parser.add_argument("-S", "--split-contigs", action="store_true",
+                        help="If set, contigs are allowed to be split up over "
+                             "multiple files.")
     args = parser.parse_args()
     return args
 

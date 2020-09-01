@@ -102,7 +102,6 @@ def scatter_regions(regions: List[BedRegion],
 def safe_scatter(regions: List[BedRegion],
                  scatter_count: int,
                  min_scatter_size: int = 10000,
-                 split_contigs: bool = True,
                  shuffle: bool = False,
                  seed: int = 42,
                  ) -> Generator[List[BedRegion], None, None]:
@@ -123,7 +122,6 @@ def safe_scatter(regions: List[BedRegion],
     :param regions: The regions over which to scatter.
     :param scatter_count: The number of bins to create.
     :param min_scatter_size: The minimum size of a scattered region.
-    :param split_contigs: Whether contigs (chr1, for example) are
     allowed to be split across multiple lists.
     :return: Yields lists of BedRegions which can be converted into bed files.
     """
@@ -172,7 +170,8 @@ def argument_parser() -> argparse.ArgumentParser:
     parser.description = (
         "Given a sequence dict, fasta index or a bed file, scatter over the "
         "defined contigs/regions. Creates a bed file where the contigs add up "
-        "to the average scatter size to within min_scatter_size.")
+        "to the average scatter size to within min_scatter_size. NOTE, this "
+        "tool always splits up contigs.")
     parser.add_argument("-c", "--scatter-count", type=int,
                         default=50,
                         help="The number of chunks to scatter the regions in."
@@ -206,7 +205,6 @@ def main():
     regions = list(file_to_regions(args.input))
     scattered_chunks = list(safe_scatter(regions, args.scatter_count,
                                          args.min_scatter_size,
-                                         split_contigs=args.split_contigs,
                                          shuffle=args.shuffle, seed=args.seed))
     out_files = region_lists_to_scatter_files(scattered_chunks, args.prefix)
     if args.print_paths:
