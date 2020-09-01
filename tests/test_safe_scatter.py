@@ -43,8 +43,14 @@ SUM_REGION_TESTS = [
 
 # Region, scatter_count, determined scatter size
 SCATTER_SIZE_TESTS = [
-    ([BedRegion("chr1", 0, 100)], 10, 10)
+    ([BedRegion("chr1", 0, 100)], 10, 10),
+    ([BedRegion("chr1", 0, 100)], 3, 33),
+    ([BedRegion("chr1", 0, 100)], 7, 14),
+    ([BedRegion("chr1", 0, 100)], 9, 11),
+    ([BedRegion("chr1", 0, 50), BedRegion("chr1", 50, 100)], 9 ,11)
 ]
+
+
 @pytest.mark.parametrize(["regions", "result"], MERGE_REGION_TESTS)
 def test_adjacent_regions(regions, result):
     merged = list(merge_regions(regions))
