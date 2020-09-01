@@ -166,15 +166,15 @@ def argument_parser() -> argparse.ArgumentParser:
         "to the average scatter size to within min_scatter_size.")
     parser.add_argument("-c", "--scatter-count", type=int,
                         default=50,
-                        help=f"The number of chunks to scatter the regions in."
-                             f"All chunks will be within --min-scatter-size "
-                             f"of each other.")
+                        help="The number of chunks to scatter the regions in."
+                             "All chunks will be within --min-scatter-size "
+                             "of each other.")
     parser.add_argument("-m", "--min-scatter-size", type=int,
                         default=10000,
-                        help=f"The minimum size of a scatter. This tool will "
-                             f"never generate regions smaller than this "
-                             f"value, unless the original regions are"
-                             f"smaller.")
+                        help="The minimum size of a scatter. This tool will "
+                             "never generate regions smaller than this "
+                             "value, unless the original regions are"
+                             "smaller.")
     return parser
 
 

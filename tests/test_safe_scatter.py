@@ -18,8 +18,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from chunked_scatter.chunked_scatter import BedRegion
 from chunked_scatter import safe_scatter
+from chunked_scatter.chunked_scatter import BedRegion
 
 import pytest
 
@@ -141,6 +141,7 @@ def test_safe_scatter_sanity(regions, scatter_count, min_scatter_size):
     with pytest.raises(RuntimeError):
         next(safe_scatter.safe_scatter(regions, scatter_count,
              min_scatter_size))
+
 
 @pytest.mark.parametrize(["regions", "scatter_count", "min_scatter_size",
                           "result"], SAFE_SCATTER_TESTS)
