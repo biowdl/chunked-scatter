@@ -101,7 +101,7 @@ def scatter_regions(regions: List[BedRegion],
 def safe_scatter(regions: List[BedRegion],
                  scatter_count: int,
                  min_scatter_size: int = 10000,
-                 contigs_can_be_split: bool = True,
+                 split_contigs: bool = True,
                  ) -> Generator[List[BedRegion], None, None]:
     """
     Scatter the regions equally over the specified scatter_count.
@@ -120,7 +120,7 @@ def safe_scatter(regions: List[BedRegion],
     :param regions: The regions over which to scatter.
     :param scatter_count: The number of bins to create.
     :param min_scatter_size: The minimum size of a scattered region.
-    :param contigs_can_be_split: Whether contigs (chr1, for example) are
+    :param split_contigs: Whether contigs (chr1, for example) are
     allowed to be split across multiple lists.
     :return: Yields lists of BedRegions which can be converted into bed files.
     """
@@ -134,17 +134,27 @@ def safe_scatter(regions: List[BedRegion],
         raise RuntimeError(msg)
 
     # Where we store all bins
-    current_bin = list()
-    current_bin_size = 0
+    current_bin = None
 
     for region in scatter_regions(regions, min_scatter_size):
+        # If this is the first ever region we parse, initialse the bin
+        if current_bin is None:
+            current_bin = [region]
+            current_bin_size = len(region)
+            continue
+        # If adding this region would put us over the target bin size,
+        # yield the bin and start a new one
         if current_bin_size + len(region) > target_bin_size:
+            # Here we merge the chunks back together if they are adjacent
             yield list(merge_regions(current_bin))
             current_bin = [region]
             current_bin_size = len(region)
+        # If this region does not put us over the target bin size, add it
         else:
             current_bin.append(region)
             current_bin_size += len(region)
+    # If we are done, yield the last bin
+    yield list(merge_regions(current_bin))
 
 
 def argument_parser() -> argparse.ArgumentParser:
@@ -172,10 +182,9 @@ def main():
     args = argument_parser().parse_args()
     # We need all regions instead of an iterator
     regions = list(file_to_regions(args.input))
-    scattered_chunks = safe_scatter(regions,
-                                    args.scatter_count,
-                                    args.min_scatter_size,
-                                    contigs_can_be_split=args.split_contigs)
+    scattered_chunks = list(safe_scatter(regions, args.scatter_count,
+                                         args.min_scatter_size,
+                                         split_contigs=args.split_contigs))
     out_files = region_lists_to_scatter_files(scattered_chunks, args.prefix)
     if args.print_paths:
         print("\n".join(out_files))
