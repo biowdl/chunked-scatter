@@ -133,14 +133,15 @@ def safe_scatter(regions: List[BedRegion],
                f"{target_bin_size})")
         raise RuntimeError(msg)
 
-    # Where we store all bins
-    current_bin = None
+    # First time running
+    first_time = True
 
     for region in scatter_regions(regions, min_scatter_size):
         # If this is the first ever region we parse, initialse the bin
-        if current_bin is None:
-            current_bin = [region]
+        if first_time:
+            current_bin: List[BedRegion] = [region]
             current_bin_size = len(region)
+            first_time = False
             continue
         # If adding this region would put us over the target bin size,
         # yield the bin and start a new one
