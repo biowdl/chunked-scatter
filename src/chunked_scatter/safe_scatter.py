@@ -20,7 +20,6 @@
 
 import argparse
 import math
-import random
 from typing import Generator, Iterable, List
 
 from .chunked_scatter import common_parser, region_lists_to_scatter_files
