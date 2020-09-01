@@ -57,13 +57,36 @@ def sum_regions(regions: List[BedRegion]):
 
 
 def determine_bin_size(regions: List[BedRegion],
-        scatter_count: int):
+                        scatter_count: int):
     """
     Determine the target scatter size, based on the total size of the regions
     and the number of target regions (scatter_count).
     """
     total_size = sum_regions(regions)
     return int(total_size/scatter_count)
+
+
+def scatter_regions(regions: List[BedRegion],
+                    min_scatter_size):
+    """
+    Scatter the regions into chunks. All chunks will be of size
+    min_scatter_size, except (possibly) the last region.
+    The last region will be >= min_scatter_size < min_scatter_size*2
+    """
+    # Make sure we don't get a floating minimum scatter size
+    min_scatter_size = int(min_scatter_size)
+
+    if min_scatter_size < 1:
+        raise RuntimeError("min_scatter_size must be a positive integer")
+    for region in regions:
+        remaining = len(region)
+        while remaining >= 2*min_scatter_size:
+            contig, start, end = region
+            new_region = BedRegion(contig, start, start+min_scatter_size)
+            yield new_region
+            region = BedRegion(contig, start+min_scatter_size, end)
+            remaining = len(region)
+        yield BedRegion(contig, start+min_scatter_size, end)
 
 
 def safe_scatter(regions: List[BedRegion],
