@@ -19,6 +19,7 @@
 # SOFTWARE.
 
 import argparse
+import math
 import random
 from typing import Generator, Iterable, List
 
@@ -66,8 +67,41 @@ def determine_bin_size(regions: List[BedRegion],
     return int(total_size/scatter_count)
 
 
-def scatter_regions(regions: List[BedRegion],
-                    min_scatter_size):
+def mix_small_regions(regions, target_bin_size):
+    """ Mix small regions in between large regions
+
+        This is intended for when there are more small region than regular
+        regions. If this is not the case, we will quickly 'use up' all small
+        regions and end up with a whole bunch of uninterrupted regular regions.
+    """
+    # Small regions are regions that are smaller than the target_bin_size
+    regular_regions = [reg for reg in regions if len(reg) >= target_bin_size]
+    small_regions = [reg for reg in regions if len(reg) < target_bin_size]
+
+    # We don't want to get divide by zero errors
+    nr_small = max(len(small_regions), 1)
+    nr_regular = max(len(regular_regions), 1)
+    small_regions_ratio = math.ceil(nr_small / nr_regular)
+
+    mixed_regions = list()
+
+    while regular_regions or small_regions:
+        # Pick small regions to ratio
+        for _ in range(small_regions_ratio):
+            try:
+                mixed_regions.append(small_regions.pop(0))
+            except IndexError:  # We are out of small regions
+                break
+        # Pick a single regular regio
+        try:
+            mixed_regions.append(regular_regions.pop(0))
+        except IndexError:  # We are out of regular regions
+            pass
+
+    return mixed_regions
+
+
+def scatter_regions(regions: List[BedRegion], min_scatter_size: int):
     """
     Scatter the regions into chunks. All chunks will be of size
     min_scatter_size, except (possibly) the last region.
@@ -78,6 +112,7 @@ def scatter_regions(regions: List[BedRegion],
 
     if min_scatter_size < 1:
         raise RuntimeError("min_scatter_size must be a positive integer")
+
     for region in regions:
         # How much of the region is still remaining
         remaining = len(region)
@@ -138,6 +173,8 @@ def safe_scatter(regions: List[BedRegion],
     if shuffle:
         random.seed(seed)
         random.shuffle(regions)
+    else:
+        regions = mix_small_regions(regions, target_bin_size)
 
     # First time running
     first_time = True

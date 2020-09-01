@@ -115,6 +115,15 @@ SAFE_SCATTER_SHUFFLE = [
     ])
 ]
 
+# regions, small_cutoff, result
+MIX_SMALL_REGIONS = [
+        (['1234', '1234', '12'], 3, ['12', '1234', '1234']),
+        (['1234', '1234', '12', '12'], 3, ['12', '1234', '12', '1234']),
+        (['12', '34', '56', '78'], 3, ['12', '34', '56', '78']),
+        ([], 3, []),
+        (['1234', '1234', '1234'], 3, ['1234', '1234', '1234']),
+]
+
 
 @pytest.mark.parametrize(["regions", "result"], MERGE_REGION_TESTS)
 def test_adjacent_regions(regions, result):
@@ -171,3 +180,13 @@ def test_safe_scatter_shuffle(regions, scatter_count, min_scatter_size,
     scattered_regions = list(safe_scatter.safe_scatter(regions, scatter_count,
                              min_scatter_size, shuffle=True, seed=42))
     assert scattered_regions == result
+
+
+@pytest.mark.parametrize(["regions", "small_cutoff", "result"],
+                         MIX_SMALL_REGIONS)
+def test_mix_regions(regions, small_cutoff, result):
+    mixed_regions = safe_scatter.mix_small_regions(regions, small_cutoff)
+    mixed_total = safe_scatter.sum_regions(mixed_regions)
+    original_total = safe_scatter.sum_regions(regions)
+    assert mixed_total == original_total
+    assert mixed_regions == result
