@@ -79,7 +79,17 @@ def scatter_regions(regions: List[BedRegion],
     if min_scatter_size < 1:
         raise RuntimeError("min_scatter_size must be a positive integer")
     for region in regions:
+        # How much of the region is still remaining
         remaining = len(region)
+
+        # If the current region is so small we cannot get 2 min_scatter_size
+        # from it, just yield the the entire region and continue
+        if remaining < 2*min_scatter_size:
+            yield region
+            continue
+
+        # We keep looping as long as there are at least 2 min_scatter_size left
+        # of the region
         while remaining >= 2*min_scatter_size:
             contig, start, end = region
             new_region = BedRegion(contig, start, start+min_scatter_size)

@@ -70,7 +70,11 @@ SCATTER_REGIONS_TESTS = [
         BedRegion("chr1", 4, 5)]),
      ([BedRegion("chr1", 0, 2)], 1.2, [
         BedRegion("chr1", 0, 1),
-        BedRegion("chr1", 1, 2)])
+        BedRegion("chr1", 1, 2)]),
+     ([BedRegion("chr1", 0, 10)], 20, [
+        BedRegion("chr1", 0, 10)]),
+     ([BedRegion("chr1", 0, 10), BedRegion("chr2", 0, 12)], 20, [
+        BedRegion("chr1", 0, 10), BedRegion("chr2", 0, 12)])
 ]
 
 SCATTER_REGIONS_INVALID = [
