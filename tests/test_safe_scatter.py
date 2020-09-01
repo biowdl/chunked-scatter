@@ -102,19 +102,6 @@ SAFE_SCATTER_TESTS = [
     ])
 ]
 
-# region, scatter_count, scatter_size, result
-SAFE_SCATTER_SHUFFLE = [
-    ([BedRegion("chr1", 0, 100)], 4, 25, [
-        [BedRegion("chr1", 0, 25)],
-        [BedRegion("chr1", 25, 50)],
-        [BedRegion("chr1", 50, 75)],
-        [BedRegion("chr1", 75, 100)]
-    ]),
-    ([BedRegion("chr1", 0, 100), BedRegion("chr2", 0, 100)], 1, 25, [
-        [BedRegion("chr2", 0, 100), BedRegion("chr1", 0, 100)]
-    ])
-]
-
 # regions, small_cutoff, result
 MIX_SMALL_REGIONS = [
         (['1234', '1234', '12'], 3, ['12', '1234', '1234']),
@@ -170,15 +157,6 @@ def test_safe_scatter_sanity(regions, scatter_count, min_scatter_size):
 def test_safe_scatter(regions, scatter_count, min_scatter_size, result):
     scattered_regions = list(safe_scatter.safe_scatter(regions, scatter_count,
                              min_scatter_size))
-    assert scattered_regions == result
-
-
-@pytest.mark.parametrize(["regions", "scatter_count", "min_scatter_size",
-                          "result"], SAFE_SCATTER_SHUFFLE)
-def test_safe_scatter_shuffle(regions, scatter_count, min_scatter_size,
-                              result):
-    scattered_regions = list(safe_scatter.safe_scatter(regions, scatter_count,
-                             min_scatter_size, shuffle=True, seed=42))
     assert scattered_regions == result
 
 

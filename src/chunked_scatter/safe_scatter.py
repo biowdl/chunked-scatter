@@ -137,8 +137,7 @@ def scatter_regions(regions: List[BedRegion], min_scatter_size: int):
 def safe_scatter(regions: List[BedRegion],
                  scatter_count: int,
                  min_scatter_size: int = 10000,
-                 shuffle: bool = False,
-                 seed: int = 42,
+                 mix: bool = False,
                  ) -> Generator[List[BedRegion], None, None]:
     """
     Scatter the regions equally over the specified scatter_count.
@@ -169,11 +168,8 @@ def safe_scatter(regions: List[BedRegion],
                f"{target_bin_size})")
         raise RuntimeError(msg)
 
-    # Shuffle the input regions, deterministically
-    if shuffle:
-        random.seed(seed)
-        random.shuffle(regions)
-    else:
+    # Mix small and regular regions
+    if mix:
         regions = mix_small_regions(regions, target_bin_size)
 
     # First time running
@@ -210,8 +206,7 @@ def argument_parser() -> argparse.ArgumentParser:
         "to the average scatter size to within min_scatter_size. NOTE, this "
         "tool always splits up contigs.")
     parser.formatter_class = argparse.ArgumentDefaultsHelpFormatter
-    parser.add_argument("-c", "--scatter-count", type=int,
-                        default=50,
+    parser.add_argument("-c", "--scatter-count", type=int, required=True,
                         help="The number of chunks to scatter the regions in. "
                              "All chunks will be within --min-scatter-size "
                              "of each other except for the final chunk.")
@@ -221,19 +216,20 @@ def argument_parser() -> argparse.ArgumentParser:
                              "never generate regions smaller than this "
                              "value, unless the original regions are"
                              "smaller.")
-    parser.add_argument("--shuffle", default=False,
+    parser.add_argument("--mix-small-regions", default=False,
                         action="store_true",
                         help=(
-                            "Shuffle the regions before scattering. This can "
-                            "be useful in case there is a bias in the "
-                            "composition of the regions. For example, the "
-                            "human reference genome has all unplaced contigs "
-                            "(which are more difficult to process) at the end "
-                            "of the file, which means they all end up in the "
-                            "same bedfile. Enabling shuffling prevents this."
+                            "Mix small regions in between regular regions. "
+                            "This can be useful in case there "
+                            "is a bias in the composition of the regions. For "
+                            "example, the human reference genome has all "
+                            "unplaced contigs (which are small and difficult "
+                            "to process) at the end of the file, which means "
+                            "they all end up in the same bedfile. Enabling "
+                            "mixing prevents this. Small regions defined as "
+                            "regions that will not be split up by the "
+                            "scattering."
                         ))
-    parser.add_argument("--seed", default=42,
-                        help="Random seed to use when shuffling")
     return parser
 
 
@@ -243,7 +239,7 @@ def main():
     regions = list(file_to_regions(args.input))
     scattered_chunks = list(safe_scatter(regions, args.scatter_count,
                                          args.min_scatter_size,
-                                         shuffle=args.shuffle, seed=args.seed))
+                                         mix=args.mix_small_regions))
     out_files = region_lists_to_scatter_files(scattered_chunks, args.prefix)
     if args.print_paths:
         print("\n".join(out_files))

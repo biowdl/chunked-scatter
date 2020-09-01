@@ -101,7 +101,7 @@ optional arguments:
 ### safe-scatter
 ```
 usage: safe-scatter [-h] [-p PREFIX] [-P] [-c SCATTER_COUNT]
-                    [-m MIN_SCATTER_SIZE] [--shuffle] [--seed SEED]
+                    [-m MIN_SCATTER_SIZE] [--mix-small-regions]
                     INPUT
 
 Given a sequence dict, fasta index or a bed file, scatter over the defined
@@ -131,14 +131,13 @@ optional arguments:
                         The minimum size of a scatter. This tool will never
                         generate regions smaller than this value, unless the
                         original regions aresmaller. (default: 10000)
-  --shuffle             Shuffle the regions before scattering. This can be
-                        useful in case there is a bias in the composition of
-                        the regions. For example, the human reference genome
-                        has all unplaced contigs (which are more difficult to
-                        process) at the end of the file, which means they all
-                        end up in the same bedfile. Enabling shuffling
-                        prevents this. (default: False)
-  --seed SEED           Random seed to use when shuffling (default: 42)
+  --mix-small-regions   Mix small regions with regular regions in the input
+                        regions. This can be useful in case there is a bias in
+                        the composition of the regions. For example, the human
+                        reference genome has all unplaced contigs (which are
+                        small and difficult to process) at the end of the
+                        file, which means they all end up in the same bedfile.
+                        Enabling mixing prevents this (default: False)
 ```
 
 ## Examples
