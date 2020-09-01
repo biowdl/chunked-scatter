@@ -163,6 +163,7 @@ def test_safe_scatter(regions, scatter_count, min_scatter_size, result):
                              min_scatter_size))
     assert scattered_regions == result
 
+
 @pytest.mark.parametrize(["regions", "scatter_count", "min_scatter_size",
                           "result"], SAFE_SCATTER_SHUFFLE)
 def test_safe_scatter_shuffle(regions, scatter_count, min_scatter_size,
