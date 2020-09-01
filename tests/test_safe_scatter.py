@@ -82,13 +82,23 @@ SCATTER_REGIONS_INVALID = [
 
 # region, scatter_count, scatter_size
 SAFE_SCATTER_INVALID = [
-    ([BedRegion("chr1", 0, 100)], 4, 100)
+    ([BedRegion("chr1", 0, 100)], 4, 100),
+    ([BedRegion("chr1", 0, 100)], 4, 26)
 ]
 
 # region, scatter_count, scatter_size, result
 SAFE_SCATTER_TESTS = [
     ([BedRegion("chr1", 0, 100)], 1, 50, [
         [BedRegion("chr1", 0, 100)]
+    ]),
+    ([BedRegion("chr1", 0, 100)], 1, 100, [
+        [BedRegion("chr1", 0, 100)]
+    ]),
+    ([BedRegion("chr1", 0, 100)], 4, 25, [
+        [BedRegion("chr1", 0, 25)],
+        [BedRegion("chr1", 25, 50)],
+        [BedRegion("chr1", 50, 75)],
+        [BedRegion("chr1", 75, 100)]
     ])
 ]
 
