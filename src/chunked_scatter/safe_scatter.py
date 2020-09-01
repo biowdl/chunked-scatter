@@ -56,7 +56,7 @@ def sum_regions(regions: List[BedRegion]):
     return sum (len(region) for region in regions)
 
 
-def determine_scatter_size(regions: List[BedRegion],
+def determine_bin_size(regions: List[BedRegion],
         scatter_count: int):
     """
     Determine the target scatter size, based on the total size of the regions
@@ -72,10 +72,16 @@ def safe_scatter(regions: List[BedRegion],
                     contigs_can_be_split: bool = True,
                     ) -> Generator[List[BedRegion], None, None]:
     """
-    Scatter the regions over the specified scatter_count. This is done in a
-    manner that guarantees the following:
-      - There are no regions smaller than min_scatter_size, unless one of the
-        original regions is smaller than min_scatter_size.
+    Scatter the regions equally over the specified scatter_count.
+
+    The terminology here is that we will generate scatter_count "bins", and we
+    will place each of the scattered regions (len >= min_scatter_size) in one
+    of the bins.
+
+    This is done in a manner that guarantees the following:
+      - No regions will be split smaller than min_scatter_size. There can be
+        regions smaller than min_scatter_size, but only when the original
+        the original region was smaller than min_scatter_size.
       - All scatters will be within min_scatter_size of each other.
 
     Any overlapping bed records are merged together.
@@ -86,6 +92,8 @@ def safe_scatter(regions: List[BedRegion],
     allowed to be split across multiple lists.
     :return: Yields lists of BedRegions which can be converted into bed files.
     """
+    target_bin_size = determine_bin_size(regions, scatter_count)
+
     for region_list in region_lists:
         yield list(merge_regions(region_list))
 

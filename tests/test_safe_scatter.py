@@ -42,7 +42,7 @@ SUM_REGION_TESTS = [
 ]
 
 # Region, scatter_count, determined scatter size
-SCATTER_SIZE_TESTS = [
+BIN_SIZE_TESTS = [
     ([BedRegion("chr1", 0, 100)], 10, 10),
     ([BedRegion("chr1", 0, 100)], 3, 33),
     ([BedRegion("chr1", 0, 100)], 7, 14),
@@ -63,6 +63,6 @@ def test_sum_regions(regions, result):
 
 
 @pytest.mark.parametrize(["regions", "scatter_count", "result"],
-        SCATTER_SIZE_TESTS)
-def test_determine_scatter_size(regions, scatter_count, result):
-    assert determine_scatter_size(regions, scatter_count) == result
+        BIN_SIZE_TESTS)
+def test_determine_bin_size(regions, scatter_count, result):
+    assert determine_bin_size(regions, scatter_count) == result
