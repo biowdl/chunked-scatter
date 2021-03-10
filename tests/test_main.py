@@ -23,6 +23,7 @@ from pathlib import Path
 
 from chunked_scatter.chunked_scatter import main, parse_args
 from chunked_scatter.scatter_regions import main as scatter_regions_main
+from chunked_scatter.safe_scatter import main as safe_scatter_main
 
 DATA_DIR = Path(__file__).parent / Path("data")
 
@@ -86,6 +87,24 @@ def test_scatter_regions_main(tmpdir, capsys):
     assert Path(str(tmpdir), "scatters", "scatter-3.bed").exists()
     assert Path(str(tmpdir), "scatters", "scatter-2.bed").read_text() == (
         "chr1\t2200000\t3000000\n"
+    )
+    captured = capsys.readouterr()
+    assert str(Path(str(tmpdir), "scatters", "scatter-0.bed")) in captured.out
+
+
+def test_safe_scatter_main(tmpdir, capsys):
+    sys.argv = ["safe-scatter", "-p",
+                str(Path(str(tmpdir), "scatters", "scatter-")),
+                "--scatter-count", "3",
+                str(Path(DATA_DIR, "ref.dict")),
+                "--print-paths"]
+    safe_scatter_main()
+    assert Path(str(tmpdir), "scatters", "scatter-0.bed").exists()
+    assert Path(str(tmpdir), "scatters", "scatter-1.bed").exists()
+    assert Path(str(tmpdir), "scatters", "scatter-2.bed").exists()
+    assert not Path(str(tmpdir), "scatters", "scatter-3.bed").exists()
+    assert Path(str(tmpdir), "scatters", "scatter-1.bed").read_text() == (
+        "chr1\t1160000\t2320000\n"
     )
     captured = capsys.readouterr()
     assert str(Path(str(tmpdir), "scatters", "scatter-0.bed")) in captured.out
