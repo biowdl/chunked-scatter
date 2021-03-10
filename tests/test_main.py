@@ -22,8 +22,8 @@ import sys
 from pathlib import Path
 
 from chunked_scatter.chunked_scatter import main, parse_args
-from chunked_scatter.scatter_regions import main as scatter_regions_main
 from chunked_scatter.safe_scatter import main as safe_scatter_main
+from chunked_scatter.scatter_regions import main as scatter_regions_main
 
 DATA_DIR = Path(__file__).parent / Path("data")
 
