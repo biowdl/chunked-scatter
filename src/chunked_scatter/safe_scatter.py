@@ -175,6 +175,11 @@ def safe_scatter(regions: List[BedRegion],
     # First time running
     first_time = True
 
+    # Keep track of the number of bins we have left, so we don't overshoot the
+    # target number of scatters by 1 if there is a tiny region left after
+    # dividing all regions over the bins.
+    bins_left = scatter_count
+
     for region in scatter_regions(regions, min_scatter_size):
         # If this is the first ever region we parse, initialise the bin
         if first_time:
@@ -184,11 +189,12 @@ def safe_scatter(regions: List[BedRegion],
             continue
         # If adding this region would put us over the target bin size,
         # yield the bin and start a new one
-        if current_bin_size + len(region) > target_bin_size:
+        if current_bin_size + len(region) > target_bin_size and bins_left > 1:
             # Here we merge the chunks back together if they are adjacent
             yield list(merge_regions(current_bin))
             current_bin = [region]
             current_bin_size = len(region)
+            bins_left -= 1
         # If this region does not put us over the target bin size, add it
         else:
             current_bin.append(region)
