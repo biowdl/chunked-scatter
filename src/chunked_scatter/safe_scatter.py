@@ -77,10 +77,11 @@ def mix_small_regions(regions, target_bin_size):
     regular_regions = [reg for reg in regions if len(reg) >= target_bin_size]
     small_regions = [reg for reg in regions if len(reg) < target_bin_size]
 
-    # We don't want to get divide by zero errors
-    nr_small = max(len(small_regions), 1)
-    nr_regular = max(len(regular_regions), 1)
-    small_regions_ratio = math.ceil(nr_small / nr_regular)
+    # Determine the ratio of small regions
+    try:
+        small_regions_ratio = math.ceil(len(small_regions)/ len(regular_regions))
+    except ZeroDivisionError:
+        small_regions_ratio = 1
 
     mixed_regions = list()
 
