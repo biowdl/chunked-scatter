@@ -164,7 +164,7 @@ def test_safe_scatter(regions, scatter_count, min_scatter_size, result):
                           "result"], SAFE_SCATTER_TESTS)
 def test_safe_scatter_mix(regions, scatter_count, min_scatter_size, result):
     scattered_regions = list(safe_scatter.safe_scatter(regions, scatter_count,
-                             min_scatter_size,mix=True))
+                             min_scatter_size, mix=True))
     assert scattered_regions == result
 
 

@@ -79,7 +79,8 @@ def mix_small_regions(regions, target_bin_size):
 
     # Determine the ratio of small regions
     try:
-        small_regions_ratio = math.ceil(len(small_regions)/ len(regular_regions))
+        small_regions_ratio = math.ceil(len(small_regions) /
+                                        len(regular_regions))
     except ZeroDivisionError:
         small_regions_ratio = 1
 
