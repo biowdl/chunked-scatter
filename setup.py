@@ -54,5 +54,6 @@ setup(name="chunked-scatter",
       entry_points={
           "console_scripts":
               ["chunked-scatter=chunked_scatter.chunked_scatter:main",
+               "safe-scatter=chunked_scatter.safe_scatter:main",
                "scatter-regions=chunked_scatter.scatter_regions:main"]
       })

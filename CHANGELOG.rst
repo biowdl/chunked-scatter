@@ -2,6 +2,12 @@
 Changelog
 ==========
 
+version 1.1.0
+---------------------------
++ The ``--scatter-count`` option is now required.
++ Added option ``--mix-small-regions`` to evenly mix small regions in the input.
++ Added ``safe-scatter`` which produces a more even scattering.
+
 version 1.0.0
 ---------------------------
 + VCF files can now also be used as input files. `Pysam
